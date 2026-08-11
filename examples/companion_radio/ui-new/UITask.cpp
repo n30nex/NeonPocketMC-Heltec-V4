@@ -2,6 +2,9 @@
 #include <helpers/TxtDataHelpers.h>
 #include "../MyMesh.h"
 #include "target.h"
+#ifdef NEONPOCKET_MONO_UI
+  #include "NeonPocketMono.h"
+#endif
 #ifdef WIFI_SSID
   #include <WiFi.h>
 #endif
@@ -9,7 +12,11 @@
 #ifndef AUTO_OFF_MILLIS
   #define AUTO_OFF_MILLIS     15000   // 15 seconds
 #endif
-#define BOOT_SCREEN_MILLIS   3000   // 3 seconds
+#ifdef NEONPOCKET_MONO_UI
+  #define BOOT_SCREEN_MILLIS NeonPocketMono::DURATION_MILLIS
+#else
+  #define BOOT_SCREEN_MILLIS 3000
+#endif
 
 #ifdef PIN_STATUS_LED
 #define LED_ON_MILLIS     20
@@ -34,6 +41,7 @@
 class SplashScreen : public UIScreen {
   UITask* _task;
   unsigned long dismiss_after;
+  unsigned long started_at;
   char _version_info[12];
 
 public:
@@ -48,10 +56,16 @@ public:
     memcpy(_version_info, ver, len);
     _version_info[len] = 0;
 
-    dismiss_after = millis() + BOOT_SCREEN_MILLIS;
+    started_at = millis();
+    dismiss_after = started_at + BOOT_SCREEN_MILLIS;
   }
 
   int render(DisplayDriver& display) override {
+#ifdef NEONPOCKET_MONO_UI
+    NeonPocketMono::drawFrame(display, millis() - started_at,
+        NEONPOCKET_DEVICE_LABEL, _version_info);
+    return NeonPocketMono::FRAME_MILLIS;
+#else
     // meshcore logo
     display.setColor(UIColor::corp_blue);
     int logoWidth = 128;
@@ -75,6 +89,7 @@ public:
     display.drawTextCentered(display.width()/2, 48, FIRMWARE_BUILD_DATE);
 
     return 1000;
+#endif
   }
 
   void poll() override {
@@ -107,6 +122,8 @@ class HomeScreen : public UIScreen {
   NodePrefs* _node_prefs;
   uint8_t _page;
   bool _shutdown_init;
+  unsigned long _power_confirm_until;
+  unsigned long _transition_started;
   AdvertPath recent[UI_RECENT_LIST_SIZE];
 
 
@@ -125,6 +142,17 @@ class HomeScreen : public UIScreen {
     if (batteryPercentage > 100) batteryPercentage = 100; // Clamp to 100%
 
     // battery icon
+#ifdef NEONPOCKET_MONO_UI
+    int iconWidth = 14;
+    int iconHeight = 7;
+    int iconX = display.width() - iconWidth - 4;
+    int iconY = 2;
+    display.setColor(UIColor::window_bkg);
+    display.drawRect(iconX, iconY, iconWidth, iconHeight);
+    display.fillRect(iconX + iconWidth, iconY + 2, 2, 3);
+    int fillWidth = (batteryPercentage * (iconWidth - 4)) / 100;
+    display.fillRect(iconX + 2, iconY + 2, fillWidth, iconHeight - 4);
+#else
     int iconWidth = 24;
     int iconHeight = 10;
     int iconX = display.width() - iconWidth - 5; // Position the icon near the top-right corner
@@ -140,6 +168,7 @@ class HomeScreen : public UIScreen {
     // fill the battery based on the percentage
     int fillWidth = (batteryPercentage * (iconWidth - 4)) / 100;
     display.fillRect(iconX + 2, iconY + 2, fillWidth, iconHeight - 4);
+#endif
 
     // show muted icon if buzzer is muted
 #ifdef PIN_BUZZER
@@ -180,15 +209,61 @@ class HomeScreen : public UIScreen {
 public:
   HomeScreen(UITask* task, mesh::RTCClock* rtc, SensorManager* sensors, NodePrefs* node_prefs)
      : _task(task), _rtc(rtc), _sensors(sensors), _node_prefs(node_prefs), _page(0),
-       _shutdown_init(false), sensors_lpp(200) {  }
+       _shutdown_init(false), _power_confirm_until(0),
+       _transition_started(millis()), sensors_lpp(200) {  }
+
+#ifdef NEONPOCKET_MONO_UI
+  bool isPowerConfirmationVisible() const {
+    return _page == HomePage::SHUTDOWN && _power_confirm_until != 0 &&
+        (long)(_power_confirm_until - millis()) > 0;
+  }
+
+  void armPower(bool confirm_visible = false) {
+    const unsigned long now = millis();
+    if (confirm_visible && isPowerConfirmationVisible()) {
+      _shutdown_init = true;
+    } else {
+      _page = HomePage::SHUTDOWN;
+      _power_confirm_until = now + 8000;
+      _transition_started = now;
+    }
+  }
+#endif
 
   void poll() override {
+#ifdef NEONPOCKET_MONO_UI
+    if (_power_confirm_until != 0 &&
+        (long)(millis() - _power_confirm_until) >= 0 && !_shutdown_init) {
+      _power_confirm_until = 0;
+    }
+#endif
     if (_shutdown_init && !_task->isButtonPressed()) {  // must wait for USR button to be released
       _task->shutdown();
     }
   }
 
   int render(DisplayDriver& display) override {
+#ifdef NEONPOCKET_MONO_UI
+    char tmp[80];
+    display.setTextSize(1);
+    display.setColor(UIColor::corp_blue);
+    display.fillRect(0, 0, display.width(), 11);
+    display.setColor(UIColor::window_bkg);
+    display.setCursor(2, 2);
+    display.print("NP");
+    display.fillRect(16, 1, 1, 9);
+    display.setColor(UIColor::title_txt);
+    char filtered_name[sizeof(_node_prefs->node_name)];
+    display.translateUTF8ToBlocks(filtered_name, _node_prefs->node_name, sizeof(filtered_name));
+    display.drawTextEllipsized(20, 2, 82, filtered_name);
+    renderBatteryIndicator(display, _task->getBattMilliVolts());
+
+    display.setColor(UIColor::secondary_txt);
+    int dot_x = 64 - (HomePage::Count * 3);
+    for (uint8_t i = 0; i < HomePage::Count; ++i, dot_x += 6) {
+      display.fillRect(dot_x, 13, i == _page ? 3 : 1, i == _page ? 3 : 1);
+    }
+#else
     display.setColor(UIColor::title_bkg);
     display.fillRect(0, 0, display.width(), 12);
     char tmp[80];
@@ -218,8 +293,37 @@ public:
         display.fillRect(x, y, 2, 2);
       }
     }
+#endif
 
     if (_page == HomePage::FIRST) {
+#ifdef NEONPOCKET_MONO_UI
+      display.setColor(UIColor::secondary_txt);
+      display.setTextSize(1);
+      display.setCursor(2, 19);
+      display.print("HOME");
+      display.setColor(UIColor::primary_txt);
+      display.setTextSize(2);
+      sprintf(tmp, "%d", _task->getMsgCount());
+      display.setCursor(2, 30);
+      display.print(tmp);
+      display.setTextSize(1);
+      display.setCursor(30, 36);
+      display.print(_task->getMsgCount() == 1 ? "UNREAD" : "UNREAD MSGS");
+      display.setColor(UIColor::corp_blue);
+      display.fillRect(2, 50, 124, 1);
+      display.setColor(UIColor::secondary_txt);
+      if (_task->hasConnection()) {
+        display.setCursor(2, 54);
+        display.print("BLE CONNECTED");
+      } else if (the_mesh.getBLEPin() != 0) {
+        sprintf(tmp, "PAIR %06d", the_mesh.getBLEPin());
+        display.setCursor(2, 54);
+        display.print(tmp);
+      } else {
+        display.setCursor(2, 54);
+        display.print("BLE READY");
+      }
+#else
       display.setColor(UIColor::primary_txt);
       display.setTextSize(2);
       sprintf(tmp, "MSG: %d", _task->getMsgCount());
@@ -242,6 +346,7 @@ public:
         sprintf(tmp, "Pin:%d", the_mesh.getBLEPin());
         display.drawTextCentered(display.width() / 2, 43, tmp);
       }
+#endif
     } else if (_page == HomePage::RECENT) {
       the_mesh.getRecentlyHeard(recent, UI_RECENT_LIST_SIZE);
       display.setColor(UIColor::primary_txt);
@@ -428,26 +533,66 @@ public:
         display.setColor(UIColor::warning_txt);
         display.drawTextCentered(display.width() / 2, 34, "hibernating...");
       } else {
+#ifdef NEONPOCKET_MONO_UI
+        display.setColor(UIColor::primary_txt);
+        display.drawTextCentered(display.width() / 2, 22, "POWER");
+        if (_power_confirm_until != 0 &&
+            (long)(_power_confirm_until - millis()) > 0) {
+          display.setColor(UIColor::warning_txt);
+          display.drawTextCentered(display.width() / 2, 36, "HOLD AGAIN");
+          display.setColor(UIColor::secondary_txt);
+          display.drawTextCentered(display.width() / 2, 50, "to hibernate");
+        } else {
+          display.setColor(UIColor::secondary_txt);
+          display.drawTextCentered(display.width() / 2, 38, "HOLD TO ARM");
+        }
+#else
         display.setColor(UIColor::secondary_txt);
         display.drawXbm((display.width() - 32) / 2, 18, power_icon, 32, 32);
         display.drawTextCentered(display.width() / 2, 64 - 11, "hibernate:" PRESS_LABEL);
+#endif
       }
     }
-    return 5000;   // next render after 5000 ms
+#ifdef NEONPOCKET_MONO_UI
+    const unsigned long transition_age = millis() - _transition_started;
+    if (transition_age < 320) {
+      const int y = 18 + (transition_age * 40UL) / 320UL;
+      display.setColor(UIColor::corp_blue);
+      display.fillRect(0, y, display.width(), 1);
+      return 80;
+    }
+    return _power_confirm_until ? 250 : 1000;
+#else
+    return 5000;
+#endif
   }
 
   bool handleInput(char c) override {
     if (c == KEY_LEFT || c == KEY_PREV) {
       _page = (_page + HomePage::Count - 1) % HomePage::Count;
+#ifdef NEONPOCKET_MONO_UI
+      _transition_started = millis();
+      _power_confirm_until = 0;
+#endif
       return true;
     }
     if (c == KEY_NEXT || c == KEY_RIGHT) {
       _page = (_page + 1) % HomePage::Count;
+#ifdef NEONPOCKET_MONO_UI
+      _transition_started = millis();
+      _power_confirm_until = 0;
+#endif
       if (_page == HomePage::RECENT) {
         _task->showAlert("Recent adverts", 800);
       }
       return true;
     }
+#ifdef NEONPOCKET_MONO_UI
+    if (c == KEY_ENTER && _page == HomePage::FIRST) {
+      _task->gotoMsgPreviewScreen();
+      return true;
+    }
+#endif
     if (c == KEY_ENTER && _page == HomePage::BLUETOOTH) {
       if (_task->isBluetoothEnabled()) {  // toggle Bluetooth on/off
         _task->disableBluetooth();
@@ -479,7 +624,11 @@ public:
     }
 #endif
     if (c == KEY_ENTER && _page == HomePage::SHUTDOWN) {
+#ifdef NEONPOCKET_MONO_UI
+      armPower();
+#else
       _shutdown_init = true;  // need to wait for button to be released
+#endif
       return true;
     }
     return false;
@@ -899,12 +1048,28 @@ char UITask::handleLongPress(char c) {
     the_mesh.enterCLIRescue();
     c = 0;   // consume event
   }
+#ifdef NEONPOCKET_MONO_UI
+  if (c != 0) {
+    c = checkDisplayOn(c);
+    if (c != 0) {
+      HomeScreen* home_screen = (HomeScreen*)home;
+      const bool confirm_visible = curr == home && home_screen->isPowerConfirmationVisible();
+      setCurrScreen(home);
+      home_screen->armPower(confirm_visible);
+      c = 0;
+    }
+  }
+#endif
   return c;
 }
 
 char UITask::handleDoubleClick(char c) {
   MESH_DEBUG_PRINTLN("UITask: double-click triggered");
+#ifdef NEONPOCKET_MONO_UI
+  c = checkDisplayOn(KEY_ENTER);
+#else
   checkDisplayOn(c);
+#endif
   return c;
 }
 

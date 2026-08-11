@@ -84,12 +84,18 @@ MultiSerialInterface interface_manager;
   DataStore store(LittleFS, rtc_clock);
 #elif defined(ESP32)
   #include <SPIFFS.h>
+#ifdef NEONPOCKET_SAFE_SPIFFS_BOOTSTRAP
+  #include <esp_partition.h>
+#endif
   DataStore store(SPIFFS, rtc_clock);
 #endif
 
 /* GLOBAL OBJECTS */
 #ifdef DISPLAY_CLASS
   #include "UITask.h"
+#ifdef NEONPOCKET_MONO_UI
+  #include "ui-new/NeonPocketMono.h"
+#endif
   UITask ui_task(&board, &interface_manager);
 #endif
 
@@ -104,8 +110,44 @@ MyMesh the_mesh(radio_driver, fast_rng, rtc_clock, tables, store
 /* END GLOBAL OBJECTS */
 
 void halt() {
-  while (1) ;
+  while (1) delay(1000);
 }
+
+#ifdef DISPLAY_CLASS
+static void showFatal(DisplayDriver* display_driver, const char* line1, const char* line2) {
+  if (display_driver == NULL) return;
+  if (!display_driver->isOn()) display_driver->turnOn();
+  display_driver->startFrame();
+  display_driver->setTextSize(1);
+  display_driver->setColor(UIColor::warning_txt);
+  display_driver->drawTextCentered(display_driver->width() / 2, 20, line1);
+  display_driver->setColor(UIColor::primary_txt);
+  display_driver->drawTextCentered(display_driver->width() / 2, 38, line2);
+  display_driver->endFrame();
+}
+#endif
+
+#if defined(ESP32) && defined(NEONPOCKET_SAFE_SPIFFS_BOOTSTRAP)
+static bool isSpiffsPartitionErased() {
+  const esp_partition_t* partition = esp_partition_find_first(
+      ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, nullptr);
+  if (partition == nullptr) return false;
+  uint8_t chunk[1024];
+  for (size_t offset = 0; offset < partition->size; offset += sizeof(chunk)) {
+    const size_t remaining = partition->size - offset;
+    const size_t length = remaining < sizeof(chunk) ? remaining : sizeof(chunk);
+    if (esp_partition_read(partition, offset, chunk, length) != ESP_OK) return false;
+    for (size_t i = 0; i < length; ++i) if (chunk[i] != 0xFF) return false;
+  }
+  return true;
+}
+
+static bool beginSpiffsPreservingData() {
+  if (SPIFFS.begin(false)) return true;
+  if (!isSpiffsPartitionErased()) return false;
+  return SPIFFS.format() && SPIFFS.begin(false);
+}
+#endif
 
 /* WIFI RECONNECT TRACKERS */
 #if defined(ESP32) && defined(WIFI_SSID)
@@ -129,12 +171,28 @@ void setup() {
   #ifdef ST7789
     disp->setTextSize(2);
   #endif
+#ifdef NEONPOCKET_MONO_UI
+    NeonPocketMono::drawFrame(*disp, 0, NEONPOCKET_DEVICE_LABEL, FIRMWARE_VERSION);
+#else
     disp->drawTextCentered(disp->width() / 2, 28, "Loading...");
+#endif
     disp->endFrame();
   }
+#ifdef DISPLAY_REQUIRED
+  else {
+    Serial.println("ERROR: required display initialization failed");
+    halt();
+  }
+#endif
 #endif
 
-  if (!radio_init()) { halt(); }
+  if (!radio_init()) {
+    Serial.println("ERROR: radio initialization failed");
+#ifdef DISPLAY_CLASS
+    showFatal(disp, "RADIO INIT FAILED", "Reset device");
+#endif
+    halt();
+  }
 
   fast_rng.begin(radio_driver.getRngSeed());
 
@@ -171,7 +229,17 @@ void setup() {
     #endif
   );
 #elif defined(ESP32)
+#ifdef NEONPOCKET_SAFE_SPIFFS_BOOTSTRAP
+  if (!beginSpiffsPreservingData()) {
+    Serial.println("ERROR: SPIFFS mount failed; data was not formatted");
+#ifdef DISPLAY_CLASS
+    showFatal(disp, "STORAGE ERROR", "Data preserved");
+#endif
+    halt();
+  }
+#else
   SPIFFS.begin(true);
+#endif
   store.begin();
   the_mesh.begin(
     #ifdef DISPLAY_CLASS
