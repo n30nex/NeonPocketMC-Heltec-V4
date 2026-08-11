@@ -1,0 +1,36 @@
+name: NeonPocket Heltec V4 Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO
+        run: pip install platformio
+      - name: Verify product contract
+        run: python scripts/verify_neonpocket_mono.py
+      - name: Build application and recovery images
+        run: pio run -e heltec_v4_neonpocket_companion_ble -t mergebin
+      - name: Package checksums
+        shell: bash
+        run: |
+          out=.pio/build/heltec_v4_neonpocket_companion_ble
+          mkdir -p dist
+          cp "$out/firmware.bin" dist/NeonPocketMC-Heltec-V4-BLE-app.bin
+          cp "$out/firmware-merged.bin" dist/NeonPocketMC-Heltec-V4-BLE-recovery-preserves-settings.bin
+          (cd dist && sha256sum *.bin > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NeonPocketMC-Heltec-V4-${{ github.sha }}
+          path: dist/*
+          if-no-files-found: error
+
