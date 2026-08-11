@@ -40,7 +40,28 @@ The recovery image replaces boot/application metadata and clears ESP32 NVS state
 
 ## Hardware gallery
 
-An actual-device OLED photograph from the V4 qualification unit will be committed here and reused on Canadaverse. Rendered mockups are not presented as hardware evidence.
+These frames were exported from the SSD1306 framebuffer of the connected V4 qualification unit. They are actual device output, not browser mockups.
+
+<p align="center">
+  <img src="docs/images/neonpocket-v4-splash-on-device.gif" alt="NeonPocketMC demo-scene startup captured from the Heltec V4 OLED" width="640">
+</p>
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/neonpocket-v4-home.png" alt="Heltec V4 Home dashboard" width="360"><br><strong>Home</strong></td>
+    <td align="center"><img src="docs/images/neonpocket-v4-nearby.png" alt="Heltec V4 Nearby page" width="360"><br><strong>Nearby</strong></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/neonpocket-v4-radio.png" alt="Heltec V4 Radio page" width="360"><br><strong>Radio</strong></td>
+    <td align="center"><img src="docs/images/neonpocket-v4-bluetooth.png" alt="Heltec V4 Bluetooth page" width="360"><br><strong>Bluetooth</strong></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/neonpocket-v4-advert.png" alt="Heltec V4 Advert page" width="360"><br><strong>Advert</strong></td>
+    <td align="center"><img src="docs/images/neonpocket-v4-power.png" alt="Heltec V4 Power page" width="360"><br><strong>Power</strong></td>
+  </tr>
+</table>
+
+Capture provenance and checksums are recorded in [`docs/images/README.md`](docs/images/README.md).
 
 ## Status
 
