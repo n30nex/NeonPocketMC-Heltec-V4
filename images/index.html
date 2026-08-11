@@ -10,13 +10,11 @@
       
       
       
-        <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/number_allocations/">
+        <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/images/">
       
       
-        <link rel="prev" href="../nrf52_power_management/">
+        <link rel="prev" href="../terminal_chat_cli/">
       
-      
-        <link rel="next" href="../packet_format/">
       
       
         
@@ -27,7 +25,7 @@
     
     
       
-        <title>Number Allocations - MeshCore Docs</title>
+        <title>Heltec V4 live OLED captures - MeshCore Docs</title>
       
     
     
@@ -70,7 +68,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#number-allocations" class="md-skip">
+        <a href="#heltec-v4-live-oled-captures" class="md-skip">
           Skip to content
         </a>
       
@@ -105,7 +103,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Number Allocations
+              Heltec V4 live OLED captures
             
           </span>
         </div>
@@ -412,19 +410,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../number_allocations/" class="md-nav__link">
         
   
   
@@ -440,7 +429,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -584,18 +572,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" checked>
         
           
           <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
@@ -616,7 +606,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_14">
             <span class="md-nav__icon md-icon"></span>
             
@@ -631,10 +621,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../images/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -650,6 +649,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -697,7 +697,7 @@
 
 
   
-    <a href="https://github.com/meshcore-dev/meshcore/edit/main/docs/number_allocations.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/meshcore-dev/meshcore/edit/main/docs/images/README.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -705,55 +705,52 @@
   
 
 
-<h1 id="number-allocations">Number Allocations</h1>
-<p>This document lists unique numbers/identifiers used in various MeshCore protocol payloads.</p>
-<h1 id="group-data-types">Group Data Types</h1>
-<p>The <code>PAYLOAD_TYPE_GRP_DATA</code> payloads have a 16-bit data-type field, which identifies which application the packet is for.</p>
-<p>To make sure multiple applications can function without interfering with each other, the table below is for reserving various ranges of data-type values. Just modify this table, adding a row, then submit a PR to have it authorised/merged.</p>
-<p>NOTE: the range FF00 - FFFF is for use while you're developing, doing POC, and for these you don't need to request to use/allocate.</p>
-<p>Once you have a working app/project, you need to be able to demonstrate it exists/works, and THEN request type IDs. So, just use the testing/dev range while developing, then request IDs before you transition to publishing your project.</p>
+<h1 id="heltec-v4-live-oled-captures">Heltec V4 live OLED captures</h1>
+<p>These files were exported from the 128x64 SSD1306 framebuffer of the physical Heltec WiFi LoRa 32 V4 qualification unit. They are device-rendered frames, not reconstructed mockups.</p>
+<ul>
+<li>Production source base: <code>92fb0a5290f685f5f4c7b3b60e11ccbf9f40c1f5</code></li>
+<li>Hardware: Heltec WiFi LoRa 32 V4/V4.3 with integrated OLED and SX1262/FEM radio path</li>
+<li>Capture: temporary app-only diagnostic build; MeshCore SPIFFS identity partition was backed up and left untouched</li>
+<li>The capture hook is absent from the released BLE image</li>
+</ul>
 <table>
 <thead>
 <tr>
-<th>Data-Type range</th>
-<th>App name</th>
-<th>Contact</th>
+<th>File</th>
+<th>SHA-256</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>0000 - 00FF</td>
-<td>-reserved for internal use-</td>
-<td></td>
+<td><code>neonpocket-v4-home.png</code></td>
+<td><code>7e1e183e4e3e6c1053a0ab306eb0dd37f3dd08caa238721ff6e8c8f536ebbcb0</code></td>
 </tr>
 <tr>
-<td>0100</td>
-<td>MeshCore Open</td>
-<td>zsylvester@monitormx.com — https://github.com/zjs81/meshcore-open</td>
+<td><code>neonpocket-v4-nearby.png</code></td>
+<td><code>550e013e955e5cc88c08849cad4602dead23297dcb2f5b09af4c1483c1c1b8cb</code></td>
 </tr>
 <tr>
-<td>0110 - 011F</td>
-<td>Ripple</td>
-<td>ripple_biz@protonmail.com — https://buymeacoffee.com/ripplebiz</td>
+<td><code>neonpocket-v4-radio.png</code></td>
+<td><code>1b8d8510035825abd374d2dd2ceb409902f143842b8bb4cdf21e6dd7228054e4</code></td>
 </tr>
 <tr>
-<td>0120</td>
-<td>MCO Advanced</td>
-<td>most.original.address@gmail.com — https://hdden.ru/MCOa/</td>
+<td><code>neonpocket-v4-bluetooth.png</code></td>
+<td><code>0b77b158c5bdea80acf9c6a9e5fd306917f9829ed328da56e2fd2b7b2ba90665</code></td>
 </tr>
 <tr>
-<td>0130 - 013F</td>
-<td>StreamSensor</td>
-<td>william@housedillon.com - https://housedillon.com/blog/lora-e5-with-seeed-fusion</td>
+<td><code>neonpocket-v4-advert.png</code></td>
+<td><code>3b27433bb4a62ec98aa74310f7207611693a8b59e61297c3e4706a0ae2048dbc</code></td>
 </tr>
 <tr>
-<td>FF00 - FFFF</td>
-<td>-reserved for testing/dev-</td>
-<td></td>
+<td><code>neonpocket-v4-power.png</code></td>
+<td><code>1ecdf9c04dd5d5424e07898658df0c971a3dc1f4a21be6f8cc96e0a8cd291bec</code></td>
+</tr>
+<tr>
+<td><code>neonpocket-v4-splash-on-device.gif</code></td>
+<td><code>fb238968efa3e782ac3634ffc1d5bae226471c2d780130453f446952d1158a2c</code></td>
 </tr>
 </tbody>
 </table>
-<p>(add rows, inside the range 0100 - FEFF for custom apps)</p>
 
 
 
