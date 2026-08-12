@@ -32,7 +32,7 @@ The firmware value `TX 10 dBm` is intentional on this board: MeshCore’s V4 har
 
 ## Install
 
-Download the latest experimental prerelease from [Releases](https://github.com/n30nex/NeonPocketMC-Heltec-V4/releases).
+Download the current experimental [`v1.0.0-rc.2` release](https://github.com/n30nex/NeonPocketMC-Heltec-V4/releases/tag/v1.0.0-rc.2).
 
 - Normal update: flash `NeonPocketMC-Heltec-V4-BLE-app.bin` at offset `0x10000`.
 - Recovery only: flash `NeonPocketMC-Heltec-V4-BLE-recovery-preserves-settings.bin` at offset `0x0`.
@@ -66,7 +66,7 @@ Capture provenance and checksums are recorded in [`docs/images/README.md`](docs/
 
 ## Status
 
-`v1.0.0-rc.1` is experimental. CI proves the exact target compiles and packages correctly; the release notes identify the physical receipts completed for that exact candidate.
+`v1.0.0-rc.2` is experimental. It adds the triple-press Home/clear shortcut and is CI-qualified on the exact Heltec V4 target. No new physical V4 receipt is claimed for RC2.
 
 ## Upstream and licensing
 
