@@ -25,6 +25,7 @@ The firmware value `TX 10 dBm` is intentional on this board: MeshCore’s V4 har
 - Screen off: the first gesture only wakes the OLED.
 - Single press: next page or next Inbox message.
 - Double press: current-page action; on Home it opens Inbox.
+- Triple press: return to Home; from Inbox it also clears every local unread message.
 - Hold: show Power confirmation.
 - Hold again within eight seconds while confirmation is visible: hibernate after release.
 - During the first eight seconds after boot, hold enters MeshCore CLI Rescue.

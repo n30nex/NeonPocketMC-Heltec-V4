@@ -213,6 +213,13 @@ public:
        _transition_started(millis()), sensors_lpp(200) {  }
 
 #ifdef NEONPOCKET_MONO_UI
+  void neonGoHome() {
+    _page = HomePage::FIRST;
+    _shutdown_init = false;
+    _power_confirm_until = 0;
+    _transition_started = millis();
+  }
+
   bool isPowerConfirmationVisible() const {
     return _page == HomePage::SHUTDOWN && _power_confirm_until != 0 &&
         (long)(_power_confirm_until - millis()) > 0;
@@ -1075,8 +1082,16 @@ char UITask::handleDoubleClick(char c) {
 
 char UITask::handleTripleClick(char c) {
   MESH_DEBUG_PRINTLN("UITask: triple click triggered");
+#ifdef NEONPOCKET_MONO_UI
+  c = checkDisplayOn(KEY_SELECT);
+  if (c == 0) return 0;
+  if (curr == msg_preview) curr->handleInput(KEY_ENTER);
+  static_cast<HomeScreen*>(home)->neonGoHome();
+  gotoHomeScreen();
+#else
   checkDisplayOn(c);
   toggleBuzzer();
+#endif
   c = 0;
   return c;
 }
