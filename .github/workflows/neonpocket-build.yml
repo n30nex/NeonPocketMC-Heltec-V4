@@ -9,6 +9,14 @@ on:
 jobs:
   firmware:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: heltec_v4_neonpocket_companion_ble
+            transport: BLE
+          - environment: heltec_v4_neonpocket_companion_usb
+            transport: USB
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,18 +27,17 @@ jobs:
       - name: Verify product contract
         run: python scripts/verify_neonpocket_mono.py
       - name: Build application and recovery images
-        run: pio run -e heltec_v4_neonpocket_companion_ble -t mergebin
+        run: pio run -e ${{ matrix.environment }} -t mergebin
       - name: Package checksums
         shell: bash
         run: |
-          out=.pio/build/heltec_v4_neonpocket_companion_ble
+          out=.pio/build/${{ matrix.environment }}
           mkdir -p dist
-          cp "$out/firmware.bin" dist/NeonPocketMC-Heltec-V4-BLE-app.bin
-          cp "$out/firmware-merged.bin" dist/NeonPocketMC-Heltec-V4-BLE-recovery-preserves-settings.bin
+          cp "$out/firmware.bin" "dist/NeonPocketMC-Heltec-V4-${{ matrix.transport }}-app.bin"
+          cp "$out/firmware-merged.bin" "dist/NeonPocketMC-Heltec-V4-${{ matrix.transport }}-recovery-preserves-settings.bin"
           (cd dist && sha256sum *.bin > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
         with:
-          name: NeonPocketMC-Heltec-V4-${{ github.sha }}
+          name: NeonPocketMC-Heltec-V4-${{ matrix.transport }}-${{ github.sha }}
           path: dist/*
           if-no-files-found: error
-
