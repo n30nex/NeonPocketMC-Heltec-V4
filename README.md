@@ -4,10 +4,10 @@
 
 # NeonPocketMC for Heltec V4
 
-Experimental MeshCore BLE companion firmware for the **Heltec WiFi LoRa 32 V4/V4.3 with its integrated 128×64 SSD1306 OLED and SX1262**.
+Experimental MeshCore BLE or native-USB companion firmware for the **Heltec WiFi LoRa 32 V4/V4.3 with its integrated 128×64 SSD1306 OLED and SX1262**.
 
 > [!WARNING]
-> **Standard integrated-OLED Heltec V4/V4.3 only. Do not flash this on Heltec V3, the V4 TFT expansion build, RCC6, RC52, Wireless Tracker, or another hardware variant.** This repository ships one BLE companion image—no Wi-Fi, repeater, or room-server firmware.
+> **Standard integrated-OLED Heltec V4/V4.3 only. Do not flash this on Heltec V3, the V4 TFT expansion build, RCC6, RC52, Wireless Tracker, or another hardware variant.** This repository ships separate BLE and native-USB companion images—no Wi-Fi, repeater, or room-server firmware.
 
 ## What is included
 
@@ -35,6 +35,7 @@ The firmware value `TX 10 dBm` is intentional on this board: MeshCore’s V4 har
 Download the current experimental [`v1.0.0-rc.2` release](https://github.com/n30nex/NeonPocketMC-Heltec-V4/releases/tag/v1.0.0-rc.2).
 
 - Normal update: flash `NeonPocketMC-Heltec-V4-BLE-app.bin` at offset `0x10000`.
+- Wired companion: flash `NeonPocketMC-Heltec-V4-USB-app.bin` at offset `0x10000`.
 - Recovery only: flash `NeonPocketMC-Heltec-V4-BLE-recovery-preserves-settings.bin` at offset `0x0`.
 
 The recovery image replaces boot/application metadata and clears ESP32 NVS state such as old BLE bonds, but does not extend into the SPIFFS data partition that holds MeshCore identity and preferences. Always verify the published SHA-256 manifest before flashing, attach a suitable antenna before transmitting, and use USB recovery if an experimental candidate fails to boot.
