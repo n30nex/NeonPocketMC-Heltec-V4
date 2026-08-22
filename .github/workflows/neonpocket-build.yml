@@ -41,3 +41,14 @@ jobs:
           name: NeonPocketMC-Heltec-V4-${{ matrix.transport }}-${{ github.sha }}
           path: dist/*
           if-no-files-found: error
+
+  required-firmware:
+    name: required-firmware
+    if: ${{ always() }}
+    needs: firmware
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require both firmware images
+        env:
+          FIRMWARE_RESULT: ${{ needs.firmware.result }}
+        run: test "$FIRMWARE_RESULT" = success
