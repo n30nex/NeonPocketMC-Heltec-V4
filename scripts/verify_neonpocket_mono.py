@@ -58,5 +58,8 @@ common_cli = (ROOT / "src/helpers/CommonCLI.cpp").read_text(encoding="utf-8")
 if common_cli.index('strcmp(command, "gps advert prefs")') > \
         common_cli.index("#if ENV_INCLUDE_GPS == 1"):
     raise SystemExit("saved-coordinate advert policy must not require physical GPS hardware")
+if common_cli.index('strcmp(command, "gps advert share")') < \
+        common_cli.index("#if ENV_INCLUDE_GPS == 1"):
+    raise SystemExit("live-location advert policy must require physical GPS hardware")
 
 print("V4 NeonPocket mono contract verified")
