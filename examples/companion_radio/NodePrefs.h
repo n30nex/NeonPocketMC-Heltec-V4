@@ -8,6 +8,7 @@
 
 #define ADVERT_LOC_NONE       0
 #define ADVERT_LOC_SHARE      1
+#define ADVERT_LOC_PREFS      2
 
 class NodePrefs : public ConfigSerializer {  // persisted to file
 public:
