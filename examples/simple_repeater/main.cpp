@@ -1,7 +1,18 @@
 #include <Arduino.h>   // needed for PlatformIO
 #include <Mesh.h>
 
+#if defined(ESP32) && defined(NEONPOCKET_SAFE_SPIFFS_BOOTSTRAP)
+  #include <esp_partition.h>
+#endif
+
 #include "MyMesh.h"
+
+#ifdef NEONPOCKET_ULTIMATE_REPEATER_WEB
+  #include <Preferences.h>
+  #include <WebServer.h>
+  #include <WiFi.h>
+  #include "UltimateRepeaterWeb.h"
+#endif
 
 #ifdef DISPLAY_CLASS
   #include "UITask.h"
@@ -18,9 +29,35 @@ SimpleMeshTables tables;
 
 MyMesh the_mesh(board, radio_driver, *new ArduinoMillis(), fast_rng, rtc_clock, tables);
 
+#ifdef NEONPOCKET_ULTIMATE_REPEATER_WEB
+UltimateRepeaterWeb ultimate_web;
+#endif
+
 void halt() {
   while (1) ;
 }
+
+#if defined(ESP32) && defined(NEONPOCKET_SAFE_SPIFFS_BOOTSTRAP)
+static bool isSpiffsPartitionErased() {
+  const esp_partition_t* partition = esp_partition_find_first(
+      ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, nullptr);
+  if (partition == nullptr) return false;
+  uint8_t chunk[1024];
+  for (size_t offset = 0; offset < partition->size; offset += sizeof(chunk)) {
+    const size_t remaining = partition->size - offset;
+    const size_t length = remaining < sizeof(chunk) ? remaining : sizeof(chunk);
+    if (esp_partition_read(partition, offset, chunk, length) != ESP_OK) return false;
+    for (size_t i = 0; i < length; ++i) if (chunk[i] != 0xFF) return false;
+  }
+  return true;
+}
+
+static bool beginSpiffsPreservingData() {
+  if (SPIFFS.begin(false)) return true;
+  if (!isSpiffsPartitionErased()) return false;
+  return SPIFFS.format() && SPIFFS.begin(false);
+}
+#endif
 
 static char command[160];
 #ifdef ETHERNET_ENABLED
@@ -57,6 +94,11 @@ void setup() {
     display.setCursor(0, 0);
     display.print("Please wait...");
     display.endFrame();
+#ifdef DISPLAY_REQUIRED
+  } else {
+    Serial.println("DISPLAY ERROR: required display did not initialize");
+    halt();
+#endif
   }
 #endif
 
@@ -73,7 +115,22 @@ void setup() {
   fs = &InternalFS;
   IdentityStore store(InternalFS, "");
 #elif defined(ESP32)
+#ifdef NEONPOCKET_SAFE_SPIFFS_BOOTSTRAP
+  if (!beginSpiffsPreservingData()) {
+    Serial.println("STORAGE ERROR: SPIFFS mount failed; refusing to format");
+#ifdef DISPLAY_CLASS
+    display.startFrame();
+    display.setCursor(0, 0);
+    display.print("STORAGE ERROR");
+    display.setCursor(0, 16);
+    display.print("USB RECOVERY");
+    display.endFrame();
+#endif
+    halt();
+  }
+#else
   SPIFFS.begin(true);
+#endif
   fs = &SPIFFS;
   IdentityStore store(SPIFFS, "/identity");
 #elif defined(RP2040_PLATFORM)
@@ -105,6 +162,27 @@ void setup() {
   sensors.begin();
 
   the_mesh.begin(fs);
+
+#ifdef NEONPOCKET_ULTIMATE_REPEATER_WEB
+  if (!ultimate_web.begin(the_mesh)) {
+    Serial.println("Ultimate Repeater Web failed to start");
+    halt();
+  }
+#ifdef DISPLAY_CLASS
+  display.startFrame();
+  display.setCursor(0, 0);
+  display.print(ultimate_web.isAccessPoint() ? "ULTIMATE SETUP AP" : "ULTIMATE LOCAL WIFI");
+  display.setCursor(0, 16);
+  display.print(ultimate_web.networkName().c_str());
+  display.setCursor(0, 32);
+  display.print(ultimate_web.ipText().c_str());
+  display.setCursor(0, 48);
+  display.print("KEY ");
+  display.print(ultimate_web.accessKey().c_str());
+  display.endFrame();
+  delay(3000);
+#endif
+#endif
 
 #ifdef DISPLAY_CLASS
   ui_task.begin(the_mesh.getNodePrefs(), FIRMWARE_BUILD_DATE, FIRMWARE_VERSION);
@@ -186,6 +264,9 @@ void loop() {
 #endif
 
   the_mesh.loop();
+#ifdef NEONPOCKET_ULTIMATE_REPEATER_WEB
+  ultimate_web.loop();
+#endif
   sensors.loop();
 #ifdef DISPLAY_CLASS
   ui_task.loop();
@@ -195,6 +276,7 @@ void loop() {
 #ifdef HAS_EXTERNAL_WATCHDOG
   external_watchdog.loop();
 #endif
+#ifndef NEONPOCKET_ULTIMATE_REPEATER_WEB
   if (the_mesh.getNodePrefs()->powersaving_enabled && !the_mesh.hasPendingWork()) {
 #if defined(NRF52_PLATFORM)
     board.sleep(0); // nrf ignores seconds param, sleeps whenever possible
@@ -204,4 +286,5 @@ void loop() {
     }
 #endif
   }
+#endif
 }

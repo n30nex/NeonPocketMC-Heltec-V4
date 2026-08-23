@@ -6,8 +6,46 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact checkout
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+      - uses: ./.github/actions/setup-build-environment
+      - name: Run upstream unit tests
+        run: pio test -e native -vv
+
+  webui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/companion_radio/webui
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact checkout
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: examples/companion_radio/webui/package-lock.json
+      - name: Build and verify embedded WebUI
+        run: |
+          npm ci
+          npm test
+          git diff --exit-code -- Rcc6WebUiAssets.h
+
   firmware:
+    needs: [tests, webui]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -15,32 +53,60 @@ jobs:
         include:
           - environment: heltec_v4_neonpocket_companion_ble
             transport: BLE
+            ultimate: false
           - environment: heltec_v4_neonpocket_companion_usb
             transport: USB
+            ultimate: false
+          - environment: heltec_v4_ultimate_companion_ble
+            transport: Ultimate-BLE
+            ultimate: true
+          - environment: heltec_v4_ultimate_companion_web
+            transport: Ultimate-Web
+            ultimate: true
+          - environment: heltec_v4_ultimate_repeater_web
+            transport: Ultimate-Repeater-Web
+            ultimate: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify exact checkout
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Install PlatformIO
         run: pip install platformio
-      - name: Verify product contract
-        run: python scripts/verify_neonpocket_mono.py
+      - name: Verify product contracts
+        run: |
+          python scripts/verify_neonpocket_mono.py
+          python scripts/verify_ultimate_mono.py
       - name: Build application and recovery images
+        env:
+          ULTIMATE_BUILD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: pio run -e ${{ matrix.environment }} -t mergebin
-      - name: Package checksums
+      - name: Verify and package images
         shell: bash
         run: |
           out=.pio/build/${{ matrix.environment }}
+          python - "$out/firmware.bin" "$out/firmware-merged.bin" <<'PY'
+          from pathlib import Path
+          import sys
+          app, merged = map(lambda value: Path(value).read_bytes(), sys.argv[1:])
+          assert app and app[0] == 0xE9, "not an ESP application image"
+          assert len(app) < 3 * 1024 * 1024, "application exceeds 3 MiB budget"
+          assert len(merged) > len(app), "recovery image is incomplete"
+          PY
           mkdir -p dist
           cp "$out/firmware.bin" "dist/NeonPocketMC-Heltec-V4-${{ matrix.transport }}-app.bin"
           cp "$out/firmware-merged.bin" "dist/NeonPocketMC-Heltec-V4-${{ matrix.transport }}-recovery-preserves-settings.bin"
           (cd dist && sha256sum *.bin > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
         with:
-          name: NeonPocketMC-Heltec-V4-${{ matrix.transport }}-${{ github.sha }}
+          name: NeonPocketMC-Heltec-V4-${{ matrix.transport }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: dist/*
           if-no-files-found: error
+          retention-days: 14
 
   required-firmware:
     name: required-firmware
@@ -48,7 +114,7 @@ jobs:
     needs: firmware
     runs-on: ubuntu-latest
     steps:
-      - name: Require both firmware images
+      - name: Require every firmware image
         env:
           FIRMWARE_RESULT: ${{ needs.firmware.result }}
         run: test "$FIRMWARE_RESULT" = success

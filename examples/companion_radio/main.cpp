@@ -1,6 +1,10 @@
 #include <Arduino.h>   // needed for PlatformIO
+#include <stdlib.h>
 #include <Mesh.h>
 #include "MyMesh.h"
+#ifdef NEONPOCKET_ULTIMATE
+  #include "UltimateService.h"
+#endif
 
 // Believe it or not, this std C function is busted on some platforms!
 static uint32_t _atoi(const char* sp) {
@@ -42,6 +46,19 @@ MultiSerialInterface interface_manager;
     SerialWifiInterface wifi_interface;
   #else
     #error "SerialWifiInterface is not defined for this platform"
+  #endif
+#endif
+
+// NeonPocket Ultimate AP/LAN Web companion. This is a separate transport image;
+// it is never enabled alongside BLE.
+#ifdef RCC6_WEB_AP
+  #include <helpers/esp32/SerialWebInterface.h>
+  SerialWebInterface web_interface;
+  #ifdef NEONPOCKET_ULTIMATE
+    #include "UltimateWebApi.h"
+  #endif
+  #ifndef TCP_PORT
+    #define TCP_PORT 5000
   #endif
 #endif
 
@@ -149,6 +166,17 @@ static bool beginSpiffsPreservingData() {
 }
 #endif
 
+#ifdef NEONPOCKET_MEMORY_GATE_BYTES
+static unsigned long next_neon_memory_probe = 0;
+
+static bool probeNeonMemory() {
+  void* probe = malloc(NEONPOCKET_MEMORY_GATE_BYTES);
+  if (probe == nullptr) return false;
+  free(probe);
+  return true;
+}
+#endif
+
 /* WIFI RECONNECT TRACKERS */
 #if defined(ESP32) && defined(WIFI_SSID)
   bool wifi_needs_reconnect = false;
@@ -248,6 +276,15 @@ void setup() {
         false
     #endif
   );
+#ifdef NEONPOCKET_ULTIMATE
+  if (!ultimate_service.begin(SPIFFS, rtc_clock, board, store)) {
+    Serial.println("ERROR: Ultimate storage initialization failed; data preserved");
+  #ifdef DISPLAY_CLASS
+    showFatal(disp, "ULTIMATE STORAGE", "Data preserved");
+  #endif
+    halt();
+  }
+#endif
 #else
   #error "need to define filesystem"
 #endif
@@ -276,6 +313,16 @@ void setup() {
   WiFi.begin(WIFI_SSID, WIFI_PWD);
   wifi_interface.begin(TCP_PORT);
   interface_manager.addInterface(InterfaceType::WiFi, &wifi_interface);
+#endif
+
+// add NeonPocket AP/LAN Web interface
+#ifdef RCC6_WEB_AP
+  board.setInhibitSleep(true);
+  web_interface.begin(the_mesh.getNodePrefs()->node_name, TCP_PORT);
+#ifdef NEONPOCKET_ULTIMATE
+  ultimate_web_api.begin(web_interface);
+#endif
+  interface_manager.addInterface(InterfaceType::WiFi, &web_interface);
 #endif
 
 // add usb interface
@@ -309,11 +356,37 @@ void setup() {
   ui_task.begin(disp, &sensors, the_mesh.getNodePrefs());  // still want to pass this in as dependency, as prefs might be moved
 #endif
 
+#ifdef NEONPOCKET_MEMORY_GATE_BYTES
+  if (!probeNeonMemory()) {
+    Serial.print("ERROR: NeonPocket memory gate failed: ");
+    Serial.print(NEONPOCKET_MEMORY_GATE_BYTES / 1024);
+    Serial.println(" KB");
+  #ifdef DISPLAY_CLASS
+    showFatal(disp, "MEMORY GATE", "Activity halted");
+  #endif
+    halt();
+  }
+  Serial.print("NeonPocket: memory gate passed: ");
+  Serial.print(NEONPOCKET_MEMORY_GATE_BYTES / 1024);
+  Serial.println(" KB");
+#ifdef NEONPOCKET_ULTIMATE
+  ultimate_service.setMemoryGatePassed(true);
+  ultimate_service.refreshStatusNow();
+#endif
+  next_neon_memory_probe = millis() + 60000;
+#endif
+
   board.onBootComplete();
 }
 
 void loop() {
   the_mesh.loop();
+#ifdef NEONPOCKET_ULTIMATE
+  ultimate_service.loop();
+  #ifdef RCC6_WEB_AP
+    ultimate_web_api.loop();
+  #endif
+#endif
   interface_manager.loop();
   sensors.loop();
 #ifdef DISPLAY_CLASS
@@ -322,6 +395,23 @@ void loop() {
   rtc_clock.tick();
 #ifdef HAS_EXTERNAL_WATCHDOG
   external_watchdog.loop();
+#endif
+
+#ifdef NEONPOCKET_MEMORY_GATE_BYTES
+  const unsigned long memory_now = millis();
+  if ((long)(memory_now - next_neon_memory_probe) >= 0) {
+    next_neon_memory_probe = memory_now + 60000;
+    if (!probeNeonMemory()) {
+      Serial.println("ERROR: NeonPocket runtime memory gate failed");
+    #ifdef DISPLAY_CLASS
+      showFatal(&display, "MEMORY GATE", "Activity halted");
+    #endif
+      halt();
+    }
+  #ifdef NEONPOCKET_ULTIMATE
+    ultimate_service.setMemoryGatePassed(true);
+  #endif
+  }
 #endif
 
   if (!the_mesh.hasPendingWork()) {
