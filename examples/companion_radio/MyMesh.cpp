@@ -934,12 +934,10 @@ void MyMesh::begin(bool has_display) {
   _store->loadPrefs(_prefs);
   sensors.node_lat = _prefs.node_lat;
   sensors.node_lon = _prefs.node_lon;
-#if ENV_INCLUDE_GPS != 1
-  if (_prefs.advert_loc_policy == ADVERT_LOC_SHARE) {
+  if (_prefs.advert_loc_policy == ADVERT_LOC_SHARE && sensors.getLocationProvider() == nullptr) {
     _prefs.advert_loc_policy = ADVERT_LOC_PREFS;
     _store->savePrefs(_prefs);
   }
-#endif
 
   // sanitise bad pref values
   _prefs.rx_delay_base = constrain(_prefs.rx_delay_base, 0, 20.0f);
@@ -1451,11 +1449,9 @@ void MyMesh::handleCmdFrame(size_t len) {
 
       if (len >= 4) {
         _prefs.advert_loc_policy = cmd_frame[3];
-#if ENV_INCLUDE_GPS != 1
-        if (_prefs.advert_loc_policy == ADVERT_LOC_SHARE) {
+        if (_prefs.advert_loc_policy == ADVERT_LOC_SHARE && sensors.getLocationProvider() == nullptr) {
           _prefs.advert_loc_policy = ADVERT_LOC_PREFS;
         }
-#endif
         if (len >= 5) {
           _prefs.multi_acks = cmd_frame[4];
         }
