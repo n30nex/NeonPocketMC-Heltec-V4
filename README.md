@@ -22,14 +22,17 @@ Experimental MeshCore BLE, native-USB, and Ultimate Wi-Fi/Web companion firmware
 
 ## Ultimate experimental builds
 
-Two additional targets bring the portable RCC6 Ultimate feature set to the 128×64 OLED:
+Three additional targets bring the portable RCC6 Ultimate experience to the 128×64 OLED:
 
 - `heltec_v4_ultimate_companion_ble`: standard MeshCore BLE companion compatibility plus persistent history, metrics, recent-node signal tracking, composer state, and diagnostics.
 - `heltec_v4_ultimate_companion_web`: setup AP, local 2.4 GHz Wi-Fi mode, authenticated offline WebUI, full TCP companion protocol on port 5000, history/export/settings/location APIs, and signed app-slot OTA support.
+- `heltec_v4_ultimate_repeater_web`: a dedicated MeshCore repeater with an authenticated live dashboard, recent-neighbor view, radio/packet/battery/airtime graphs, flood-advert controls, restricted radio/location/name configuration, and AP-to-LAN onboarding.
 
 Both use 350 contacts, 40 channels, 256 pending companion frames, a 32-event callback queue, a 64-node recent-heard cache, selectable 0/128/512/2048-message history, seven-day hourly metrics, a 32 KiB runtime allocation gate, and the existing NeonPocket demo-scene startup. The OLED adds compact Network and Ultimate status pages; the full composer, charts, history manager, location transfer, and Wi-Fi onboarding live in the WebUI.
 
 BLE and Wi-Fi never run together. In Web mode, HTTP is authenticated, but TCP port 5000 intentionally exposes the complete MeshCore companion/admin protocol to the trusted local LAN. Do not use station mode on an untrusted network.
+
+The Ultimate Repeater is a separate role image: it does not expose the companion TCP protocol and it never runs BLE. On first boot, join the `NeonPocket-XXXXXX` setup AP and open `http://192.168.4.1`. The OLED and USB serial output show the generated 12-character key; use username `neonpocket`. After local Wi-Fi is saved, the OLED shows the LAN IP at boot. If the saved network cannot be reached within ten seconds, the private setup AP returns. Wi-Fi stays awake in this build, so use the standard repeater image for solar/battery deployments.
 
 The RCC6 indexed color framebuffer, 220×128 tile animations, and color-only notification effects are hardware-specific and are not copied to this monochrome OLED build.
 

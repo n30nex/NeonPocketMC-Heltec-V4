@@ -31,14 +31,18 @@ service_cpp = text("examples/companion_radio/UltimateService.cpp")
 web = text("examples/companion_radio/UltimateWebApi.cpp")
 ui = text("examples/companion_radio/ui-new/UITask.cpp")
 asset = text("examples/companion_radio/webui/Rcc6WebUiAssets.h")
+repeater_main = text("examples/simple_repeater/main.cpp")
+repeater_web = text("examples/simple_repeater/UltimateRepeaterWeb.h")
 
 ble_env = f"[env:heltec_{board}_ultimate_companion_ble]"
 web_env = f"[env:heltec_{board}_ultimate_companion_web]"
+repeater_env = f"[env:heltec_{board}_ultimate_repeater_web]"
 ota_target = f"-D NEONPOCKET_ULTIMATE_OTA_TARGET='\"heltec_{board}\"'"
 
 checks = {
     "Ultimate BLE target": ble_env in platform,
     "Ultimate Web target": web_env in platform,
+    "Ultimate Repeater Web target": repeater_env in platform,
     "MeshCore 1.17.1": "-D FIRMWARE_VERSION='\"v1.17.1\"'" in platform,
     "mutually exclusive transports": platform.index(ble_env) != platform.index(web_env)
         and "-D BLE_PIN_CODE=123456" in platform[platform.index(ble_env):platform.index(web_env)]
@@ -66,6 +70,20 @@ checks = {
     "authenticated Ultimate APIs": "/api/ultimate/status" in web
         and "/api/ultimate/history" in web and "/api/ultimate/location" in web,
     "generated embedded WebUI": "RCC6_WEB_UI_INDEX_GZ[] PROGMEM" in asset,
+    "repeater fail-closed storage": "SPIFFS.begin(false)" in repeater_main
+        and "refusing to format" in repeater_main,
+    "repeater Wi-Fi onboarding": all(token in repeater_web for token in (
+        "WiFi.softAP", "WiFi.begin", 'server.on("/api/network"', "Preferences")),
+    "repeater authenticated dashboard": "server.authenticate" in repeater_web
+        and 'server.on("/api/status"' in repeater_web,
+    "repeater restricted command surface": "isAllowedCommand" in repeater_web
+        and "Command not allowed" in repeater_web,
+    "repeater live mesh metrics": all(token in repeater_web for token in (
+        'runCommand("stats-core")', 'runCommand("stats-radio")',
+        'runCommand("stats-packets")', 'runCommand("neighbors")')),
+    "repeater three-byte advert hashes": "-D DEFAULT_PATH_HASH_MODE=2" in platform,
+    "repeater 64-node recent view": "-D MAX_NEIGHBOURS=64" in platform,
+    "repeater Wi-Fi stays awake": "#ifndef NEONPOCKET_ULTIMATE_REPEATER_WEB" in repeater_main,
 }
 
 failed = [name for name, ok in checks.items() if not ok]

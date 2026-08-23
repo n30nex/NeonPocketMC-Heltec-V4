@@ -63,6 +63,9 @@ jobs:
           - environment: heltec_v4_ultimate_companion_web
             transport: Ultimate-Web
             ultimate: true
+          - environment: heltec_v4_ultimate_repeater_web
+            transport: Ultimate-Repeater-Web
+            ultimate: true
     steps:
       - uses: actions/checkout@v4
         with:
