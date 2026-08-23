@@ -3,7 +3,6 @@
 #ifdef NEONPOCKET_ULTIMATE_REPEATER_WEB
 
 #include <Arduino.h>
-#include <DNSServer.h>
 #include <Preferences.h>
 #include <WebServer.h>
 #include <WiFi.h>
@@ -18,7 +17,6 @@
 class UltimateRepeaterWeb {
   static constexpr const char* kUser = "neonpocket";
   WebServer server{80};
-  DNSServer dns;
   Preferences prefs;
   MyMesh* mesh = nullptr;
   String access_key;
@@ -112,7 +110,6 @@ class UltimateRepeaterWeb {
     snprintf(suffix, sizeof(suffix), "%06lX", static_cast<unsigned long>(ESP.getEfuseMac() & 0xFFFFFFULL));
     ap_ssid = String("NeonPocket-") + suffix;
     WiFi.softAP(ap_ssid.c_str(), access_key.c_str());
-    dns.start(53, "*", WiFi.softAPIP());
     ap_mode = true;
   }
 
@@ -252,7 +249,6 @@ public:
   }
 
   void loop() {
-    if (ap_mode) dns.processNextRequest();
     server.handleClient();
     if (reboot_pending && static_cast<int32_t>(millis() - reboot_at) >= 0) ESP.restart();
   }
@@ -290,5 +286,4 @@ refresh();setInterval(refresh,7000);
 )HTML";
 
 #endif
-
 
