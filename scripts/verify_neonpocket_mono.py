@@ -56,15 +56,17 @@ require(
 
 common_cli = (ROOT / "src/helpers/CommonCLI.cpp").read_text(encoding="utf-8")
 mesh = (ROOT / "examples/companion_radio/MyMesh.cpp").read_text(encoding="utf-8")
-if common_cli.index('strcmp(command, "gps advert prefs")') > \
-        common_cli.index("#if ENV_INCLUDE_GPS == 1"):
+share_command = common_cli.index('strcmp(command, "gps advert share")')
+gps_hardware_guard = common_cli.index("#if ENV_INCLUDE_GPS == 1", share_command)
+if common_cli.index('strcmp(command, "gps advert prefs")') > share_command:
     raise SystemExit("saved-coordinate advert policy must not require physical GPS hardware")
-if common_cli.index('strcmp(command, "gps advert share")') < \
-        common_cli.index("#if ENV_INCLUDE_GPS == 1"):
-    raise SystemExit("live-location advert policy must require physical GPS hardware")
+if "_sensors->getLocationProvider() != NULL" not in common_cli[share_command:gps_hardware_guard]:
+    raise SystemExit("live-location advert policy must require an actual GPS provider")
 if common_cli.count("_prefs->advert_loc_policy = ADVERT_LOC_PREFS;") < 2:
     raise SystemExit("GPS-less CLI prefs must normalize saved live-location mode")
-if mesh.count("_prefs.advert_loc_policy = ADVERT_LOC_PREFS;") < 2:
+if "_sensors->getLocationProvider() == NULL" not in common_cli:
+    raise SystemExit("CLI migration must test the actual GPS provider")
+if mesh.count("sensors.getLocationProvider() == nullptr") < 2:
     raise SystemExit("GPS-less companion prefs must normalize live-location mode")
 
 print("V4 NeonPocket mono contract verified")
