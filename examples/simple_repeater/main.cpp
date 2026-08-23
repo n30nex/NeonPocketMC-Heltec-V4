@@ -8,6 +8,9 @@
 #include "MyMesh.h"
 
 #ifdef NEONPOCKET_ULTIMATE_REPEATER_WEB
+  #include <Preferences.h>
+  #include <WebServer.h>
+  #include <WiFi.h>
   #include "UltimateRepeaterWeb.h"
 #endif
 
