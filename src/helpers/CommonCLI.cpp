@@ -44,6 +44,12 @@ void CommonCLI::loadPrefs(FILESYSTEM* fs) {
   //    fs->remove("/com_prefs");  // remove old
     }
   }
+#if ENV_INCLUDE_GPS != 1
+  if (_prefs->advert_loc_policy == ADVERT_LOC_SHARE) {
+    _prefs->advert_loc_policy = ADVERT_LOC_PREFS;
+    savePrefs(fs);
+  }
+#endif
 }
 
 void CommonCLI::loadPrefsInt(FILESYSTEM* fs, const char* filename) {  // Legacy prefs loader
