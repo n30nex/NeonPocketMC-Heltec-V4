@@ -13,7 +13,6 @@
 #ifndef NEONPOCKET_REPEATER_WEB_DEVICE
 #define NEONPOCKET_REPEATER_WEB_DEVICE "HELTEC"
 #endif
-
 class UltimateRepeaterWeb {
   static constexpr const char* kUser = "neonpocket";
   WebServer server{80};
@@ -286,4 +285,3 @@ refresh();setInterval(refresh,7000);
 )HTML";
 
 #endif
-
