@@ -5,6 +5,13 @@
 #ifdef NEONPOCKET_MONO_UI
   #include "NeonPocketMono.h"
 #endif
+#ifdef NEONPOCKET_ULTIMATE
+  #include "../UltimateService.h"
+#endif
+#ifdef RCC6_WEB_AP
+  #include <helpers/esp32/SerialWebInterface.h>
+  extern SerialWebInterface web_interface;
+#endif
 #ifdef WIFI_SSID
   #include <WiFi.h>
 #endif
@@ -103,7 +110,13 @@ class HomeScreen : public UIScreen {
   enum HomePage {
     FIRST,
     RECENT,
+#ifdef NEONPOCKET_ULTIMATE
+    NETWORK,
+#endif
     RADIO,
+#ifdef NEONPOCKET_ULTIMATE
+    ULTIMATE,
+#endif
     BLUETOOTH,
     ADVERT,
 #if ENV_INCLUDE_GPS == 1
@@ -379,7 +392,36 @@ public:
         display.setCursor(display.width() - timestamp_width - 1, y);
         display.print(tmp);
       }
-    } else if (_page == HomePage::RADIO) {
+    }
+#ifdef NEONPOCKET_ULTIMATE
+    else if (_page == HomePage::NETWORK) {
+      const uint8_t count = ultimate_service.getNetworkCount();
+      display.setTextSize(1);
+      display.setColor(UIColor::secondary_txt);
+      display.setCursor(2, 19);
+      display.print("NETWORK");
+      display.setColor(UIColor::primary_txt);
+      snprintf(tmp, sizeof(tmp), "%u HEARD", count);
+      display.drawTextRightAlign(126, 19, tmp);
+      for (uint8_t row = 0; row < 3 && row < count; row++) {
+        const UltimateNetworkNode* node = ultimate_service.getNetworkNode(row);
+        if (node == nullptr) continue;
+        const int y = 30 + row * 11;
+        display.drawTextEllipsized(2, y, 78, node->name);
+        if (node->signal_attributable) {
+          snprintf(tmp, sizeof(tmp), "%dd %dH", node->rssi_dbm, node->path_len);
+        } else {
+          snprintf(tmp, sizeof(tmp), "-- %dH", node->path_len);
+        }
+        display.drawTextRightAlign(126, y, tmp);
+      }
+      if (count == 0) {
+        display.setColor(UIColor::secondary_txt);
+        display.drawTextCentered(64, 40, "Listening on preset");
+      }
+    }
+#endif
+    else if (_page == HomePage::RADIO) {
       display.setColor(UIColor::primary_txt);
       display.setTextSize(1);
       // freq / sf
@@ -398,7 +440,44 @@ public:
       display.setCursor(0, 53);
       sprintf(tmp, "Noise floor: %d", radio_driver.getNoiseFloor());
       display.print(tmp);
-    } else if (_page == HomePage::BLUETOOTH) {
+    }
+#ifdef NEONPOCKET_ULTIMATE
+    else if (_page == HomePage::ULTIMATE) {
+      const UltimateSnapshot& status = ultimate_service.getSnapshot();
+      display.setTextSize(1);
+      display.setColor(UIColor::secondary_txt);
+      display.setCursor(2, 19);
+      display.print("ULTIMATE");
+      display.setColor(UIColor::primary_txt);
+      snprintf(tmp, sizeof(tmp), "HIST %u/%u", status.history_count, status.history_capacity);
+      display.setCursor(2, 30);
+      display.print(tmp);
+      snprintf(tmp, sizeof(tmp), "UNREAD %u  HEAP %luK", status.unread_count,
+               (unsigned long)(status.free_heap / 1024));
+      display.setCursor(2, 41);
+      display.print(tmp);
+      snprintf(tmp, sizeof(tmp), "RX%lu TX%lu E%lu", (unsigned long)status.rx_packets,
+               (unsigned long)status.tx_packets, (unsigned long)status.tx_failures);
+      display.setCursor(2, 52);
+      display.print(tmp);
+    }
+#endif
+    else if (_page == HomePage::BLUETOOTH) {
+#ifdef RCC6_WEB_AP
+      display.setTextSize(1);
+      display.setColor(UIColor::secondary_txt);
+      display.setCursor(2, 19);
+      display.print(web_interface.isStationMode() ? "LOCAL WIFI" : "SETUP AP");
+      display.setColor(UIColor::primary_txt);
+      display.drawTextEllipsized(2, 31, 124, web_interface.getCurrentSsid());
+      IPAddress ip = web_interface.getCurrentIP();
+      snprintf(tmp, sizeof(tmp), "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+      display.setCursor(2, 43);
+      display.print(tmp);
+      display.setColor(UIColor::secondary_txt);
+      display.setCursor(2, 54);
+      display.print("HTTP + TCP/5000");
+#else
       display.setColor(UIColor::corp_blue);
       display.drawXbm((display.width() - 32) / 2, 18,
           _task->isBluetoothEnabled() ? bluetooth_on : bluetooth_off,
@@ -406,6 +485,7 @@ public:
       display.setColor(UIColor::secondary_txt);
       display.setTextSize(1);
       display.drawTextCentered(display.width() / 2, 64 - 11, "toggle: " PRESS_LABEL);
+#endif
     } else if (_page == HomePage::ADVERT) {
       display.setColor(UIColor::corp_blue);
       display.drawXbm((display.width() - 32) / 2, 18, advert_icon, 32, 32);
@@ -601,16 +681,26 @@ public:
     }
 #endif
     if (c == KEY_ENTER && _page == HomePage::BLUETOOTH) {
+#ifdef RCC6_WEB_AP
+      _task->showAlert(web_interface.isStationMode() ? "Local Wi-Fi active" : "Setup AP active", 1000);
+#else
       if (_task->isBluetoothEnabled()) {  // toggle Bluetooth on/off
         _task->disableBluetooth();
       } else {
         _task->enableBluetooth();
       }
+#endif
       return true;
     }
     if (c == KEY_ENTER && _page == HomePage::ADVERT) {
       _task->notify(UIEventType::ack);
-      if (the_mesh.advert()) {
+      if (the_mesh.advert(
+#ifdef NEONPOCKET_ULTIMATE
+          true
+#else
+          false
+#endif
+          )) {
         _task->showAlert("Advert sent!", 1000);
       } else {
         _task->showAlert("Advert failed..", 1000);
@@ -806,8 +896,13 @@ switch(t){
 
 
 void UITask::msgRead(int msgcount) {
+#ifdef NEONPOCKET_ULTIMATE
+  (void)msgcount;
+  _msgcount = ultimate_service.getSnapshot().unread_count;
+#else
   _msgcount = msgcount;
-  if (msgcount == 0) {
+#endif
+  if (_msgcount == 0) {
     gotoHomeScreen();
   }
 }
@@ -890,6 +985,9 @@ bool UITask::isButtonPressed() const {
 }
 
 void UITask::loop() {
+#ifdef NEONPOCKET_ULTIMATE
+  _msgcount = ultimate_service.getSnapshot().unread_count;
+#endif
   char c = 0;
 #if UI_HAS_JOYSTICK
   int ev = user_btn.check();
@@ -1086,6 +1184,10 @@ char UITask::handleTripleClick(char c) {
   c = checkDisplayOn(KEY_SELECT);
   if (c == 0) return 0;
   if (curr == msg_preview) curr->handleInput(KEY_ENTER);
+#ifdef NEONPOCKET_ULTIMATE
+  ultimate_service.markAllRead();
+  _msgcount = 0;
+#endif
   static_cast<HomeScreen*>(home)->neonGoHome();
   gotoHomeScreen();
 #else

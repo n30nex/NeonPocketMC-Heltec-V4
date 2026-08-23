@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050608">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="application-name" content="NeonPocketMC">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self'; img-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; object-src 'none'">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050608'/%3E%3Cpath d='M10 22h44v34H10z' fill='none' stroke='%2339e7ff' stroke-width='4'/%3E%3Cpath d='m32 30-14 18h28z' fill='none' stroke='%232457ff' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M16 14h6M31 6v8M44 11l5-3' fill='none' stroke='%2339e7ff' stroke-width='4'/%3E%3Cpath d='M28 26h8v8h-8zM14 44h8v8h-8zM42 44h8v8h-8z' fill='%2344f08a'/%3E%3C/svg%3E">
+  <title>NeonPocketMC · Ultimate</title>
+  <style>/*__RCC6_CSS__*/</style>
+</head>
+<body>
+  <svg class="svg-defs" aria-hidden="true">
+    <symbol id="brand-pocket" viewBox="0 0 64 64">
+      <path d="M10 22h44v34H10z" fill="none" stroke="#39e7ff" stroke-width="4"/>
+      <path d="m32 30-14 18h28z" fill="none" stroke="#2457ff" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M16 14h6M31 6v8M44 11l5-3" fill="none" stroke="#39e7ff" stroke-width="4"/>
+      <path d="M28 26h8v8h-8zM14 44h8v8h-8zM42 44h8v8h-8z" fill="#44f08a" stroke="none"/>
+    </symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5.5h16v11H9l-5 3z"/></symbol>
+    <symbol id="i-near" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4m8.4-8.4a6 6 0 0 1 0 8.4M4.6 4.6a10.5 10.5 0 0 0 0 14.8m14.8-14.8a10.5 10.5 0 0 1 0 14.8"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24"><path d="M5 20V10m5 10V6m5 14V9m5 11V3"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m3 4 18 8-18 8 3-8zM6 12h15"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5m9.5-4A8 8 0 0 0 5 9m.5 8A8 8 0 0 0 19 15"/></symbol>
+  </svg>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><svg class="brand-mark" aria-hidden="true"><use href="#brand-pocket"/></svg><span>NeonPocketMC<small>Ultimate Companion</small></span></div>
+      <nav class="nav" aria-label="Primary">
+        <button class="active" data-view="home"><svg><use href="#i-home"/></svg><span>Overview</span></button>
+        <button data-view="messages"><svg><use href="#i-msg"/></svg><span>Messages</span><b id="nav-unread" hidden>0</b></button>
+        <button data-view="nearby"><svg><use href="#i-near"/></svg><span>Nearby</span></button>
+        <button data-view="radio"><svg><use href="#i-radio"/></svg><span>Radio</span></button>
+        <button data-view="ultimate"><svg><use href="#i-more"/></svg><span>Device</span></button>
+      </nav>
+      <div class="sidebar-foot"><span class="status-dot" id="side-dot"></span><span id="side-status">Connecting</span></div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div><p class="eyebrow" id="screen-kicker">NEONPOCKETMC</p><h1 id="screen-title">Overview</h1></div>
+        <div class="top-actions">
+          <span class="battery" id="battery-chip">— V</span>
+          <button class="link-chip" id="connect-button"><span class="status-dot"></span><span id="link-label">Connecting</span></button>
+        </div>
+      </header>
+
+      <section class="screen active" data-screen="home">
+        <article class="hero card">
+          <div class="hero-copy">
+            <p class="eyebrow">YOUR MESH, RIGHT NOW</p>
+            <h2 id="node-name">RADIO</h2>
+            <p id="node-id">Waiting for companion link…</p>
+          </div>
+          <div class="mesh-orbit" aria-hidden="true"><i></i><i></i><i></i><span></span></div>
+          <div class="hero-stats">
+            <div><small>CONNECTION</small><strong id="hero-link">Starting</strong></div>
+            <div><small>KNOWN NODES</small><strong id="hero-contacts">—</strong></div>
+            <div><small>ONLINE FOR</small><strong id="hero-uptime">—</strong></div>
+          </div>
+        </article>
+
+        <article class="card network-banner">
+          <div class="network-icon" aria-hidden="true"><svg><use href="#i-near"/></svg></div>
+          <div><p class="eyebrow">LOCAL CONNECTION</p><h3 id="network-title">Set up local Wi-Fi</h3><p id="network-summary">Use your 2.4 GHz home network instead of staying on the setup hotspot.</p></div>
+          <button class="primary-button" id="network-setup-button">Set up local Wi-Fi</button>
+        </article>
+
+        <div class="dashboard-grid">
+          <article class="card feature-card accent-yellow">
+            <div class="card-head"><div><p class="eyebrow">INBOX</p><h3>Unread messages</h3></div><span class="count" id="home-unread">0</span></div>
+            <div class="preview empty" id="message-preview">No unread messages</div>
+            <button class="text-action" data-open="messages">Open messages <span>→</span></button>
+          </article>
+
+          <article class="card feature-card accent-orange">
+            <div class="card-head"><div><p class="eyebrow">MESH ACTIVITY</p><h3>Recently nearby</h3></div><span class="signal-bars"><i></i><i></i><i></i></span></div>
+            <div class="preview empty" id="nearby-preview">Waiting for adverts</div>
+            <button class="text-action" data-open="nearby">See nearby <span>→</span></button>
+          </article>
+
+          <article class="card radio-strip">
+            <div><p class="eyebrow">LIVE RADIO</p><strong id="home-rssi">— dBm</strong><span id="home-snr">SNR —</span></div>
+            <div class="radio-meter"><i id="radio-meter-fill"></i></div>
+            <div class="radio-meta"><span id="home-frequency">— MHz</span><span id="home-packets">— packets</span></div>
+          </article>
+          <article class="card dashboard-activity">
+            <div class="card-head"><div><p class="eyebrow">LAST 24 HOURS</p><h3>Mesh traffic</h3></div><span id="dashboard-activity-total" class="quiet">No samples yet</span></div>
+            <canvas id="dashboard-activity-chart" height="116" aria-label="Hourly received and sent packet bars"></canvas>
+            <div class="chart-legend"><span><i class="green"></i>Received</span><span><i class="blue"></i>Sent</span><span><i class="red"></i>Failed</span></div>
+          </article>
+          <div class="dashboard-health">
+            <article class="card health-tile"><small>RECEIVED</small><strong id="dashboard-rx">—</strong><span>packets</span></article>
+            <article class="card health-tile"><small>SENT</small><strong id="dashboard-tx">—</strong><span>packets</span></article>
+            <article class="card health-tile"><small>DELIVERY</small><strong id="dashboard-delivery">IDLE</strong><span id="dashboard-delivery-note">No local send</span></article>
+            <article class="card health-tile"><small>HISTORY</small><strong id="dashboard-history">—</strong><span id="dashboard-history-note">stored messages</span></article>
+          </div>
+          <div class="dashboard-analytics">
+            <article class="card analytics-card">
+              <div class="card-head"><div><p class="eyebrow">SIGNAL SAMPLES</p><h3>What the radio has heard</h3></div><span id="dashboard-signal-note" class="quiet">Waiting for packets</span></div>
+              <canvas id="dashboard-signal-chart" height="138" aria-label="Distribution of recent RSSI samples"></canvas>
+              <div class="signal-scale"><span>Very weak</span><span>Usable</span><span>Strong</span></div>
+            </article>
+            <article class="card analytics-card">
+              <div class="card-head"><div><p class="eyebrow">RECENTLY HEARD</p><h3>Freshest nearby nodes</h3></div><button class="text-action" data-open="nearby">See all →</button></div>
+              <div id="dashboard-nearby-bars" class="nearby-bars"><p class="empty-state">Waiting for node adverts.</p></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="messages">
+        <div class="messages-layout card">
+          <aside class="threads-panel">
+            <div class="section-head"><div><p class="eyebrow">CONVERSATIONS</p><h2>Messages</h2></div><span id="thread-count">0</span></div>
+            <div class="threads" id="thread-list"><p class="empty-state">Contacts and channels appear after sync.</p></div>
+          </aside>
+          <div class="conversation">
+            <div class="conversation-head">
+              <div class="avatar" id="conversation-avatar">#</div>
+              <div><strong id="conversation-title">Choose a conversation</strong><small id="conversation-subtitle">Channel or direct contact</small></div>
+            </div>
+            <div class="message-list" id="message-list"><div class="welcome-bubble">Select a channel or contact to start talking across the mesh.</div></div>
+            <form class="composer" id="composer">
+              <label class="sr-only" for="target-select">Recipient</label>
+              <select id="target-select" aria-label="Recipient"><option value="">Choose recipient</option></select>
+              <div class="compose-row">
+                <label class="sr-only" for="message-input">Message</label>
+                <textarea id="message-input" rows="1" maxlength="140" placeholder="Message the mesh…"></textarea>
+                <button type="submit" class="send-button" aria-label="Send message"><svg><use href="#i-send"/></svg></button>
+              </div>
+              <small id="compose-count">0 / 140 bytes</small>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="nearby">
+        <div class="section-head page-head"><div><p class="eyebrow">NEARBY NODES</p><h2>What this radio can hear</h2><p>Choose real advertised locations or a hop-and-recency view. The radio stays on your configured preset.</p></div><button class="icon-button" id="nearby-refresh" aria-label="Refresh contacts"><svg><use href="#i-refresh"/></svg></button></div>
+        <div class="map-switch" role="group" aria-label="Nearby view">
+          <button class="active" type="button" data-map-mode="places">Advertised places</button>
+          <button type="button" data-map-mode="heard">Hop view</button>
+        </div>
+        <article class="card mesh-map-card">
+          <canvas id="mesh-map" height="410" aria-label="Map of contacts that advertise a location"></canvas>
+          <div class="map-badge"><strong id="map-located">0 located</strong><span id="map-unlocated">0 without location</span></div>
+          <div class="map-empty" id="map-empty"><strong>No advertised locations yet</strong><span>Switch to Hop view to see recent nodes without inventing a location for them.</span></div>
+        </article>
+        <div class="section-head nearby-subhead"><div><p class="eyebrow">RECENTLY HEARD</p><h2>Nodes on this preset</h2></div></div>
+        <div class="nearby-grid" id="nearby-list"><article class="card empty-state">Nearby nodes appear as adverts arrive.</article></div>
+      </section>
+
+      <section class="screen" data-screen="radio">
+        <div class="radio-grid">
+          <article class="card signal-card">
+            <div class="card-head"><div><p class="eyebrow">SIGNAL HEALTH</p><h3>Live RF</h3></div><span class="live-pill">LIVE</span></div>
+            <div class="signal-readout"><strong id="radio-rssi">—</strong><span>dBm</span><small id="radio-quality">Waiting for sample</small></div>
+            <canvas id="signal-chart" height="124" aria-label="Recent RSSI signal chart"></canvas>
+            <div class="chart-legend"><span><i class="green"></i>RSSI</span><span id="radio-snr">SNR —</span><span id="radio-noise">Noise —</span></div>
+          </article>
+          <div class="metric-grid">
+            <article class="card metric"><small>FREQUENCY</small><strong id="radio-frequency">—</strong><span>MHz</span></article>
+            <article class="card metric"><small>BANDWIDTH</small><strong id="radio-bandwidth">—</strong><span>kHz</span></article>
+            <article class="card metric"><small>SPREADING</small><strong id="radio-spreading">—</strong><span id="radio-coding">CR —</span></article>
+            <article class="card metric"><small>TX POWER</small><strong id="radio-power">—</strong><span>dBm</span></article>
+          </div>
+          <article class="card packet-card">
+            <div class="card-head"><div><p class="eyebrow">PACKETS</p><h3>On-air counters</h3></div><span id="packet-errors" class="quiet">0 errors</span></div>
+            <div class="packet-stats"><div><strong id="packet-received">—</strong><small>Received</small></div><div><strong id="packet-sent">—</strong><small>Sent</small></div><div><strong id="packet-direct">—</strong><small>Direct RX</small></div><div><strong id="packet-flood">—</strong><small>Flood RX</small></div></div>
+          </article>
+          <article class="card radio-activity-card">
+            <div class="card-head"><div><p class="eyebrow">HOURLY ACTIVITY</p><h3>Seven-day traffic</h3></div><span id="radio-activity-total" class="quiet">No samples yet</span></div>
+            <canvas id="radio-activity-chart" height="176" aria-label="Seven-day hourly packet bars"></canvas>
+            <div class="chart-legend"><span><i class="green"></i>RX</span><span><i class="blue"></i>TX</span><span><i class="red"></i>Failures</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="ultimate">
+        <article class="ultimate-hero card">
+          <div><p class="eyebrow">THIS RADIO</p><h2>Storage, power and display</h2><p>See what the device is using, keep message history, tune the screen, and install signed updates.</p></div>
+          <div class="ultimate-gate"><span id="ultimate-gate-dot"></span><small>MEMORY HEADROOM</small><strong id="ultimate-gate">Checking</strong></div>
+        </article>
+        <div class="ultimate-metrics">
+          <article class="card metric"><small>DEVICE HISTORY</small><strong id="ultimate-history-count">—</strong><span id="ultimate-history-capacity">records</span></article>
+          <article class="card metric"><small>FREE HEAP</small><strong id="ultimate-free-heap">—</strong><span id="ultimate-largest">largest —</span></article>
+          <article class="card metric"><small>DISPLAY FLUSH</small><strong id="ultimate-flush">—</strong><span id="ultimate-tiles">tiles —</span></article>
+          <article class="card metric"><small>EVENT QUEUE</small><strong id="ultimate-drops">—</strong><span id="ultimate-queue">outbound —</span></article>
+          <article class="card metric"><small>BATTERY TREND</small><strong id="ultimate-battery">—</strong><span id="ultimate-runtime">Waiting for samples</span></article>
+          <article class="card metric"><small>LATEST DELIVERY</small><strong id="ultimate-delivery">IDLE</strong><span id="ultimate-delivery-target">No on-device send</span></article>
+        </div>
+        <div class="ultimate-grid">
+          <article class="card ultimate-chart-card"><div class="card-head"><div><p class="eyebrow">TWO HOURS</p><h3>Recent activity</h3></div><span class="live-pill">LIVE</span></div><canvas id="ultimate-minute-chart" height="170"></canvas><div class="chart-legend"><span><i class="green"></i>RX</span><span><i class="blue"></i>TX</span><span><i class="orange"></i>Battery</span></div></article>
+          <article class="card ultimate-chart-card"><div class="card-head"><div><p class="eyebrow">SEVEN DAYS</p><h3>Hourly activity</h3></div></div><canvas id="ultimate-week-chart" height="170"></canvas><div class="chart-legend"><span><i class="green"></i>RX</span><span><i class="blue"></i>TX</span><span><i class="red"></i>Failures</span></div></article>
+          <article class="card ultimate-nodes"><div class="card-head"><div><p class="eyebrow">RECENT RADIOS</p><h3>Heard by this device</h3></div><span id="ultimate-node-count">0 radios</span></div><div id="ultimate-node-list" class="ultimate-node-list"><p class="empty-state">Listening on the configured preset.</p></div></article>
+          <article class="card ultimate-history"><div class="card-head"><div><p class="eyebrow">DEVICE HISTORY</p><h3>Recent messages</h3></div><button class="text-action" id="ultimate-export">Export NDJSON ↗</button></div><div id="ultimate-history-list" class="ultimate-history-list"><p class="empty-state">No stored messages.</p></div></article>
+        </div>
+        <div class="ultimate-settings-grid">
+          <form class="card ultimate-settings" id="ultimate-settings-form">
+            <div class="card-head"><div><p class="eyebrow">DISPLAY & HISTORY</p><h3>NeonPocket settings</h3></div></div>
+            <label>History capacity<select id="ultimate-history-cap"><option value="0">Off</option><option value="128">128</option><option value="512">512</option><option value="2048">2048</option></select></label>
+            <label>Keyboard cadence<select id="ultimate-cadence"><option value="450">450 ms</option><option value="650">650 ms</option><option value="900">900 ms</option><option value="1200">1200 ms</option></select></label>
+            <label>Power profile<select id="ultimate-power-profile"><option value="0">Balanced · 60 s screen</option><option value="1">Field · 5 min screen</option><option value="2">Battery · 30 s screen</option></select></label>
+            <label>Battery capacity (mAh)<input id="ultimate-battery-capacity" type="number" min="0" max="20000" step="1" inputmode="numeric" placeholder="0 = unknown"></label>
+            <label>Battery calibration offset (mV)<input id="ultimate-battery-calibration" type="number" min="-300" max="300" step="1" inputmode="numeric"></label>
+            <label class="toggle-row"><input id="ultimate-private" type="checkbox"><span>Hide message bodies while the TFT is locked</span></label>
+            <div id="ultimate-phrases" class="ultimate-phrases"></div>
+            <button class="primary-button" type="submit">Save settings</button>
+          </form>
+          <div class="ultimate-actions">
+            <article class="card action-card"><div><p class="eyebrow">EXPLICIT LOCATION</p><h3>Transfer this browser's location</h3><p>Requested only when you tap below. Coordinates, accuracy, and advert sharing are confirmed before saving.</p><label class="toggle-row"><input id="ultimate-location-share" type="checkbox" checked><span>Include saved coordinates in this node's adverts</span></label><strong id="ultimate-location-preview">No location requested</strong></div><button class="primary-button" id="ultimate-location">Request location</button></article>
+            <form class="card action-card" id="ultimate-ota-form"><div><p class="eyebrow">SIGNED UPDATE</p><h3>Install a NeonPocket .npu package</h3><p>The device checks the board, mode, file hash and signature before writing the inactive app slot.</p><input id="ultimate-ota-file" type="file" accept=".npu" required></div><button class="primary-button" type="submit">Verify & install</button></form>
+            <article class="card action-card"><div><p class="eyebrow">DANGER ZONE</p><h3>Erase on-device history</h3><p>Disabling history never erases it. This confirmed action permanently clears only the separate /np/ journal.</p></div><button class="secondary-button danger-button" id="ultimate-clear">Clear device history</button></article>
+          </div>
+        </div>
+        <div class="more-grid device-details">
+          <article class="card device-card">
+            <p class="eyebrow">DEVICE</p><div class="device-icon"><svg class="brand-mark" aria-hidden="true"><use href="#brand-pocket"/></svg></div>
+            <h2 id="more-name">RADIO</h2><p id="more-model">MeshCore Companion</p>
+            <dl><div><dt>Firmware</dt><dd id="more-firmware">—</dd></div><div><dt>Build</dt><dd id="more-build">—</dd></div><div><dt>Public key</dt><dd id="more-key">—</dd></div></dl>
+          </article>
+          <div class="settings-stack">
+            <article class="card action-card"><div><p class="eyebrow">PRESENCE</p><h3>Advertise this node</h3><p>Queue a flood advert so nearby MeshCore nodes can discover you.</p></div><button class="primary-button" id="advert-button">Advert now</button></article>
+            <article class="card action-card"><div><p class="eyebrow">CONNECTION</p><h3 id="more-network-title">Setup AP</h3><p id="ap-address">Connected through this device at 192.168.4.1</p></div><div class="action-buttons"><button class="secondary-button" id="refresh-button">Sync now</button><button class="secondary-button danger-button" id="return-ap-button" hidden>Return to setup AP</button></div></article>
+            <article class="card action-card"><div><p class="eyebrow">PRIVACY</p><h3>Local message history</h3><p>Up to 120 messages are kept in this browser for this node. Clear them whenever you like.</p></div><button class="secondary-button" id="clear-history-button">Clear history</button></article>
+            <article class="card about-card"><div><p class="eyebrow">ABOUT</p><h3>NeonPocket Ultimate Companion</h3><p>Offline-first MeshCore companion · v<span id="app-version">—</span><br>Powered by MeshCore.js <span id="library-version">—</span> · MIT © Liam Cottle</p></div></article>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="network-dialog" id="network-dialog" aria-labelledby="network-dialog-title">
+    <div class="dialog-head"><div><p class="eyebrow">RADIO NETWORK</p><h2 id="network-dialog-title">Set up local Wi-Fi</h2></div><button type="button" class="dialog-close" id="network-dialog-close" aria-label="Close network setup">×</button></div>
+    <div class="network-current"><span class="status-dot connected"></span><div><small>CURRENT CONNECTION</small><strong id="network-current">Checking radio…</strong></div></div>
+    <form id="network-form">
+      <label for="network-ssid">2.4 GHz Wi-Fi name</label>
+      <input id="network-ssid" name="ssid" type="text" required maxlength="32" autocomplete="off" placeholder="Home Wi-Fi">
+      <label for="network-password">Wi-Fi password</label>
+      <div class="password-row"><input id="network-password" name="password" type="password" maxlength="64" autocomplete="new-password" placeholder="Leave empty for an open network"><button type="button" id="network-reveal" aria-pressed="false">Show</button></div>
+      <p class="field-help">SSID: 1–32 bytes. Password: empty, or 8–64 characters. This radio supports 2.4 GHz networks only.</p>
+      <div class="dialog-actions"><button type="button" class="secondary-button" id="network-cancel">Cancel</button><button type="submit" class="primary-button" id="network-save">Save & restart</button></div>
+    </form>
+    <div class="network-result" id="network-result" hidden>
+      <p class="eyebrow">NEXT STEPS</p><h3 id="network-result-title">Reconnect to your home Wi-Fi</h3>
+      <ol id="network-result-steps"><li>Wait for the radio to restart.</li><li>Reconnect this phone or computer to your home Wi-Fi.</li><li>Read the new DHCP IP on the screen and open it in your browser.</li></ol>
+      <p id="network-result-note">In station mode, the browser may request HTTP Basic authentication. Use username <strong>meshcore</strong> and the 8-letter key shown on the TFT as the password.</p>
+      <button type="button" class="primary-button" id="network-done">Got it</button>
+    </div>
+  </dialog>
+
+  <div class="toast-stack" id="toasts" aria-live="polite"></div>
+  <div class="boot" id="boot"><svg class="brand-mark large" aria-hidden="true"><use href="#brand-pocket"/></svg><strong>NeonPocketMC</strong><small>MeshCore Ultimate companion</small><div class="boot-line"><i></i></div></div>
+  <script>/*__RCC6_JS__*/</script>
+</body>
+</html>
