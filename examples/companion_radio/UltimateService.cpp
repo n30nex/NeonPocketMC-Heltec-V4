@@ -5,7 +5,7 @@
 #include "DataStore.h"
 #include <ultimate_build_sha.h>
 #include <esp_heap_caps.h>
-#if defined(ESP32) && (defined(HELTEC_RCC6) || defined(HELTEC_LORA_V3) || defined(HELTEC_LORA_V4))
+#if defined(ESP32) && defined(HELTEC_RCC6)
 #include <driver/usb_serial_jtag.h>
 #endif
 #include <stddef.h>
@@ -704,7 +704,11 @@ void UltimateService::sampleBatteryProjection() {
 
 void UltimateService::sampleUsbHostState() {
 #if defined(ESP32) && (defined(HELTEC_RCC6) || defined(HELTEC_LORA_V3) || defined(HELTEC_LORA_V4))
+#if defined(HELTEC_RCC6)
   const bool connected = usb_serial_jtag_is_connected();
+#else
+  const bool connected = static_cast<bool>(Serial);
+#endif
   if (connected) {
     usb_host_seen = true;
     snapshot.battery_projection_valid = false;
