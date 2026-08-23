@@ -314,6 +314,7 @@ class UltimateService {
   void processEvent(const PendingEvent& event);
   void updateNetwork(const PendingEvent& event);
   void updateThread(const UltimateHistoryRecord& record, bool newest_first);
+  void removeThreadRecord(const UltimateHistoryRecord& record);
   void rebuildThreads();
   void updateMetrics(const PendingEvent& event);
   void sampleStatus();

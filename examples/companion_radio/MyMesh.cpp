@@ -571,7 +571,11 @@ void MyMesh::queueMessage(const ContactInfo &from, uint8_t txt_type, mesh::Packe
     memcpy(_ui_reply_pubkey_prefix, from.id.pub_key, sizeof(_ui_reply_pubkey_prefix));
     _ui_reply_target = UIReplyTarget::Direct;
 #endif
-    _ui->newMsgWithEvent(hop_count, from.name, text, offline_queue_len,
+    const char* preview = text;
+#ifdef NEONPOCKET_ULTIMATE
+    if (ultimate_service.getSettings().private_notifications) preview = "Message hidden";
+#endif
+    _ui->newMsgWithEvent(hop_count, from.name, preview, offline_queue_len,
                          UIEventType::contactMessage);
     if (!_serial->isConnected()) {
       _ui->notify(UIEventType::contactMessage);
@@ -709,7 +713,11 @@ void MyMesh::onChannelMessageRecv(const mesh::GroupChannel &channel, mesh::Packe
       attributable ? _ultimate_last_rx_snr_q4 : (int8_t)(pkt->getSNR() * 4));
 #endif
   if (_ui) {
-    _ui->newMsgWithEvent(hop_count, channel_name, text, offline_queue_len,
+    const char* preview = text;
+#ifdef NEONPOCKET_ULTIMATE
+    if (ultimate_service.getSettings().private_notifications) preview = "Message hidden";
+#endif
+    _ui->newMsgWithEvent(hop_count, channel_name, preview, offline_queue_len,
                          UIEventType::channelMessage);
   }
 #endif
@@ -1230,7 +1238,14 @@ void MyMesh::handleCmdFrame(size_t len) {
         result = sendCommandData(*recipient, msg_timestamp, attempt, text, est_timeout);
         expected_ack = 0; // no Ack expected
       } else {
+#ifdef NEONPOCKET_ULTIMATE
+        _ultimate_delivery_active = false;
+        memset(_ultimate_delivery_hash, 0, sizeof(_ultimate_delivery_hash));
+        result = sendMessage(*recipient, msg_timestamp, attempt, text, expected_ack,
+                             est_timeout, _ultimate_delivery_hash);
+#else
         result = sendMessage(*recipient, msg_timestamp, attempt, text, expected_ack, est_timeout);
+#endif
       }
       // TODO: add expected ACK to table
       if (result == MSG_SEND_FAILED) {
@@ -1250,6 +1265,9 @@ void MyMesh::handleCmdFrame(size_t len) {
         _serial->writeFrame(out_frame, 10);
 #ifdef NEONPOCKET_ULTIMATE
         if (txt_type == TXT_TYPE_PLAIN) {
+          ultimate_service.startDelivery(static_cast<uint8_t>(UltimateMessageKind::Direct),
+              recipient->name, text, expected_ack, est_timeout);
+          _ultimate_delivery_active = true;
           ultimate_service.enqueueMessage(UltimateMessageKind::Direct, false, 0,
               recipient->id.pub_key, recipient->name, text, msg_timestamp,
               recipient->out_path_len, 0, 0);
@@ -1275,10 +1293,28 @@ void MyMesh::handleCmdFrame(size_t len) {
     } else {
       ChannelDetails channel;
       bool success = getChannel(channel_idx, channel);
-      if (success && sendGroupMessage(msg_timestamp, channel.channel, _prefs.node_name, text, len - i)) {
+      bool sent = false;
 #ifdef NEONPOCKET_ULTIMATE
+      _ultimate_delivery_active = false;
+      memset(_ultimate_delivery_hash, 0, sizeof(_ultimate_delivery_hash));
+      if (success) {
+        sent = sendGroupMessage(msg_timestamp, channel.channel, _prefs.node_name, text,
+                                len - i, _ultimate_delivery_hash);
+      }
+#else
+      if (success) {
+        sent = sendGroupMessage(msg_timestamp, channel.channel, _prefs.node_name, text, len - i);
+      }
+#endif
+      if (success && sent) {
+#ifdef NEONPOCKET_ULTIMATE
+        char label[32];
+        snprintf(label, sizeof(label), "#%s", channel.name);
+        ultimate_service.startDelivery(static_cast<uint8_t>(UltimateMessageKind::Channel),
+                                       label, text, 0, 0);
+        _ultimate_delivery_active = true;
         ultimate_service.enqueueMessage(UltimateMessageKind::Channel, false, channel_idx,
-            nullptr, channel.name, text, msg_timestamp, OUT_PATH_UNKNOWN, 0, 0);
+            nullptr, label, text, msg_timestamp, OUT_PATH_UNKNOWN, 0, 0);
 #endif
         writeOKFrame();
       } else {

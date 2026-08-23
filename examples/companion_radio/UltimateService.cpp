@@ -360,6 +360,8 @@ bool UltimateService::appendRecord(const PendingEvent& event) {
   copyText(record.text, sizeof(record.text), event.text);
   record.crc32 = crc32(&record, offsetof(UltimateHistoryRecord, crc32));
 
+  UltimateHistoryRecord evicted = {};
+  const bool evicted_valid = meta.count == meta.capacity && readSlot(meta.head, evicted);
   if (!writeSlot(meta.head, record)) return false;
   const JournalMeta previous = meta;
   meta.head = (meta.head + 1) % meta.capacity;
@@ -372,6 +374,7 @@ bool UltimateService::appendRecord(const PendingEvent& event) {
 
   snapshot.last_sequence = record.sequence;
   snapshot.history_count = meta.count;
+  if (evicted_valid) removeThreadRecord(evicted);
   if ((record.flags & ULTIMATE_HISTORY_INCOMING) == 0 &&
       delivery.history_sequence == 0 && delivery.kind == record.kind &&
       strncmp(delivery.target, record.sender, sizeof(delivery.target) - 1) == 0 &&
@@ -539,6 +542,29 @@ void UltimateService::updateThread(const UltimateHistoryRecord& record, bool new
     threads[0] = summary;
   } else {
     threads[found] = summary;
+  }
+}
+
+void UltimateService::removeThreadRecord(const UltimateHistoryRecord& record) {
+  const bool unread = (record.flags & (ULTIMATE_HISTORY_INCOMING | ULTIMATE_HISTORY_READ)) ==
+      ULTIMATE_HISTORY_INCOMING;
+  if (unread && snapshot.unread_count) snapshot.unread_count--;
+
+  for (uint8_t i = 0; i < thread_count; i++) {
+    const bool same = threads[i].kind == record.kind &&
+        (record.kind == static_cast<uint8_t>(UltimateMessageKind::Channel)
+             ? threads[i].target == record.target
+             : memcmp(threads[i].peer_key, record.peer_key, sizeof(record.peer_key)) == 0);
+    if (!same) continue;
+    if (unread && threads[i].unread) threads[i].unread--;
+    if (threads[i].newest_sequence == record.sequence) {
+      if (i + 1 < thread_count) {
+        memmove(&threads[i], &threads[i + 1], (thread_count - i - 1) * sizeof(threads[0]));
+      }
+      memset(&threads[thread_count - 1], 0, sizeof(threads[0]));
+      thread_count--;
+    }
+    break;
   }
 }
 

@@ -476,7 +476,12 @@ public:
       display.print(tmp);
       display.setColor(UIColor::secondary_txt);
       display.setCursor(2, 54);
-      display.print("HTTP + TCP/5000");
+      if (web_interface.isStationMode()) {
+        display.print("HTTP + TCP/5000");
+      } else {
+        snprintf(tmp, sizeof(tmp), "KEY %s", web_interface.getApPassword());
+        display.print(tmp);
+      }
 #else
       display.setColor(UIColor::corp_blue);
       display.drawXbm((display.width() - 32) / 2, 18,

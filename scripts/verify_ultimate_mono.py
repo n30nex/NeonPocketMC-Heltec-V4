@@ -66,6 +66,13 @@ checks = {
     "safe hop decoding": "encoded_path_len & 0x3F" in service_cpp
         and "encoded_path_len & 0x3F" in mesh_cpp,
     "OLED Network and Ultimate pages": "HomePage::NETWORK" in ui and "HomePage::ULTIMATE" in ui,
+    "setup AP key visible on OLED": "getApPassword()" in ui and '"KEY %s"' in ui,
+    "bounded unread accounting": "removeThreadRecord(evicted)" in service_cpp
+        and "snapshot.unread_count--" in service_cpp,
+    "private OLED previews": "private_notifications) preview" in mesh_cpp
+        and 'preview = "Message hidden"' in mesh_cpp,
+    "companion send delivery tracking": mesh_cpp.count("ultimate_service.startDelivery") >= 4
+        and "_ultimate_delivery_hash" in mesh_cpp,
     "flood advert action": "the_mesh.advert(" in ui and "true" in ui,
     "authenticated Ultimate APIs": "/api/ultimate/status" in web
         and "/api/ultimate/history" in web and "/api/ultimate/location" in web,
