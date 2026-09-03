@@ -477,7 +477,8 @@ public:
       display.setColor(UIColor::secondary_txt);
       display.setCursor(2, 54);
       if (web_interface.isStationMode()) {
-        display.print("HTTP + TCP/5000");
+        snprintf(tmp, sizeof(tmp), "meshcore/%s", web_interface.getApPassword());
+        display.print(tmp);
       } else {
         snprintf(tmp, sizeof(tmp), "KEY %s", web_interface.getApPassword());
         display.print(tmp);

@@ -30,6 +30,6 @@ MeshCore.js 1.14.0 parses the current firmware's core-stats payload incorrectly,
 
 This browser code exposes only query, sync, send, and self-advert actions. The HTTP transport must enforce the same command allowlist and one-controller policy server-side; browser validation is not a security boundary.
 
-Station-mode HTTP uses Basic authentication with username `meshcore` and the device key shown on the TFT. Raw TCP port 5000 remains the full, unauthenticated MeshCore companion/admin protocol for native clients. Only enable station mode on a trusted private LAN: any host on that LAN can control the radio over TCP, including administrative commands.
+Station-mode HTTP uses Basic authentication with username `meshcore` and the generated eight-letter device key. The setup page shows this exact login before restart, and both the OLED and 115200-baud USB serial console show it afterward. The key is not the home Wi-Fi password. Raw TCP port 5000 remains the full, unauthenticated MeshCore companion/admin protocol for native clients. Only enable station mode on a trusted private LAN: any host on that LAN can control the radio over TCP, including administrative commands.
 
 See `THIRD_PARTY_NOTICES.md` for bundled software attribution.

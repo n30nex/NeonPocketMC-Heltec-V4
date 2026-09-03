@@ -32,6 +32,8 @@ Both use 350 contacts, 40 channels, 256 pending companion frames, a 32-event cal
 
 BLE and Wi-Fi never run together. In Web mode, HTTP is authenticated, but TCP port 5000 intentionally exposes the complete MeshCore companion/admin protocol to the trusted local LAN. Do not use station mode on an untrusted network.
 
+For the Ultimate Web dashboard, the LAN login is username **`meshcore`** plus the generated eight-letter **device key**. The setup page shows the exact pair before restart; the OLED and 115200-baud USB serial console show it afterward beside the LAN address. The device key is not the home Wi-Fi password.
+
 The Ultimate Repeater is a separate role image: it does not expose the companion TCP protocol and it never runs BLE. On first boot, join the `NeonPocket-XXXXXX` setup AP and open `http://192.168.4.1`. The OLED and USB serial output show the generated 12-character key; use username `neonpocket`. After local Wi-Fi is saved, the OLED shows the LAN IP at boot. If the saved network cannot be reached within ten seconds, the private setup AP returns. Wi-Fi stays awake in this build, so use the standard repeater image for solar/battery deployments.
 
 The RCC6 indexed color framebuffer, 220×128 tile animations, and color-only notification effects are hardware-specific and are not copied to this monochrome OLED build.
@@ -50,7 +52,7 @@ The firmware value `TX 10 dBm` is intentional on this board: MeshCore’s V4 har
 
 ## Install
 
-Download the current experimental [`v1.0.0-rc.4` release](https://github.com/n30nex/NeonPocketMC-Heltec-V4/releases/tag/v1.0.0-rc.4).
+Download the current experimental [`v2.0.0-rc.2` release](https://github.com/n30nex/NeonPocketMC-Heltec-V4/releases/tag/v2.0.0-rc.2).
 
 - Normal update: flash `NeonPocketMC-Heltec-V4-BLE-app.bin` at offset `0x10000`.
 - Wired companion: flash `NeonPocketMC-Heltec-V4-USB-app.bin` at offset `0x10000`.
@@ -86,7 +88,7 @@ Capture provenance and checksums are recorded in [`docs/images/README.md`](docs/
 
 ## Status
 
-`v1.0.0-rc.4` is experimental. It keeps native USB and the triple-press Home/clear shortcut, and normalizes unsupported live-GPS advert settings to saved coordinates. Both companion targets are CI-qualified; no new physical V4 receipt is claimed for RC4.
+`v2.0.0-rc.2` is experimental. It retains the RC1 feature set and fixes the Ultimate Web AP-to-LAN handoff by exposing the exact HTTP login before restart and on the OLED and USB console afterward. The release is built and checked locally on the Canadaverse Pi 5; no new physical V4 receipt is claimed for RC2.
 
 ## Upstream and licensing
 

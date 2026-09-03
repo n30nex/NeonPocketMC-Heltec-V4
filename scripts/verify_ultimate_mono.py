@@ -31,6 +31,7 @@ service_cpp = text("examples/companion_radio/UltimateService.cpp")
 web = text("examples/companion_radio/UltimateWebApi.cpp")
 ui = text("examples/companion_radio/ui-new/UITask.cpp")
 asset = text("examples/companion_radio/webui/Rcc6WebUiAssets.h")
+serial_web = text("src/helpers/esp32/SerialWebInterface.cpp")
 repeater_main = text("examples/simple_repeater/main.cpp")
 repeater_web = text("examples/simple_repeater/UltimateRepeaterWeb.h")
 
@@ -66,7 +67,10 @@ checks = {
     "safe hop decoding": "encoded_path_len & 0x3F" in service_cpp
         and "encoded_path_len & 0x3F" in mesh_cpp,
     "OLED Network and Ultimate pages": "HomePage::NETWORK" in ui and "HomePage::ULTIMATE" in ui,
-    "setup AP key visible on OLED": "getApPassword()" in ui and '"KEY %s"' in ui,
+    "web login visible on OLED": "getApPassword()" in ui and '"KEY %s"' in ui
+        and '"meshcore/%s"' in ui,
+    "web login survives AP handoff": all(token in serial_web for token in (
+        '\\"loginUser\\"', '\\"loginKey\\"', '"Web login: %s / %s')),
     "bounded unread accounting": "removeThreadRecord(evicted)" in service_cpp
         and "snapshot.unread_count--" in service_cpp,
     "private OLED previews": "private_notifications) preview" in mesh_cpp
