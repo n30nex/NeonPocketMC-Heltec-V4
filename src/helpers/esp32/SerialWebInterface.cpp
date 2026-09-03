@@ -269,6 +269,8 @@ void SerialWebInterface::enable() {
       startServers();
       Serial.printf("Web WiFi: %s at %s (HTTP, TCP/%u)\n",
           _station_ssid, station_ip.toString().c_str(), _tcp_port);
+      Serial.printf("Web login: %s / %s (device key, not Wi-Fi password)\n",
+          HTTP_AUTH_USER, _ap_password);
       return;
     }
 
@@ -709,7 +711,7 @@ void SerialWebInterface::handleHttpGetNetwork() {
   }
 
   String response;
-  response.reserve(128);
+  response.reserve(192);
   response += F("{\"mode\":\"");
   response += _station_active ? F("station") : F("ap");
   response += F("\",\"ssid\":\"");
@@ -718,6 +720,11 @@ void SerialWebInterface::handleHttpGetNetwork() {
   response += _current_ip.toString();
   response += F("\",\"fallback\":");
   response += _fallback_active ? F("true") : F("false");
+  response += F(",\"loginUser\":\"");
+  response += HTTP_AUTH_USER;
+  response += F("\",\"loginKey\":\"");
+  response += jsonEscape(_ap_password);
+  response += '"';
   response += '}';
   _http_server.sendHeader("Cache-Control", "no-store");
   _http_server.send(200, "application/json", response);
@@ -753,8 +760,15 @@ void SerialWebInterface::handleHttpPostNetwork() {
     return;
   }
 
+  String response;
+  response.reserve(128);
+  response += F("{\"ok\":true,\"restart\":true,\"loginUser\":\"");
+  response += HTTP_AUTH_USER;
+  response += F("\",\"loginKey\":\"");
+  response += jsonEscape(_ap_password);
+  response += F("\"}");
   _http_server.sendHeader("Cache-Control", "no-store");
-  _http_server.send(202, "application/json", "{\"ok\":true,\"restart\":true}");
+  _http_server.send(202, "application/json", response);
   scheduleRestart();
 }
 

@@ -239,6 +239,7 @@
   <dialog class="network-dialog" id="network-dialog" aria-labelledby="network-dialog-title">
     <div class="dialog-head"><div><p class="eyebrow">RADIO NETWORK</p><h2 id="network-dialog-title">Set up local Wi-Fi</h2></div><button type="button" class="dialog-close" id="network-dialog-close" aria-label="Close network setup">×</button></div>
     <div class="network-current"><span class="status-dot connected"></span><div><small>CURRENT CONNECTION</small><strong id="network-current">Checking radio…</strong></div></div>
+    <div class="network-login"><small>LAN WEB LOGIN</small><strong><span id="network-login-user">meshcore</span> / <span id="network-login-key">loading…</span></strong><p>Save this device key before restart. It is not your home Wi-Fi password.</p></div>
     <form id="network-form">
       <label for="network-ssid">2.4 GHz Wi-Fi name</label>
       <input id="network-ssid" name="ssid" type="text" required maxlength="32" autocomplete="off" placeholder="Home Wi-Fi">
@@ -250,7 +251,7 @@
     <div class="network-result" id="network-result" hidden>
       <p class="eyebrow">NEXT STEPS</p><h3 id="network-result-title">Reconnect to your home Wi-Fi</h3>
       <ol id="network-result-steps"><li>Wait for the radio to restart.</li><li>Reconnect this phone or computer to your home Wi-Fi.</li><li>Read the new DHCP IP on the screen and open it in your browser.</li></ol>
-      <p id="network-result-note">In station mode, the browser may request HTTP Basic authentication. Use username <strong>meshcore</strong> and the 8-letter key shown on the TFT as the password.</p>
+      <p id="network-result-note">When prompted, use <strong>meshcore</strong> and the 8-letter device key above. It is not your home Wi-Fi password.</p>
       <button type="button" class="primary-button" id="network-done">Got it</button>
     </div>
   </dialog>

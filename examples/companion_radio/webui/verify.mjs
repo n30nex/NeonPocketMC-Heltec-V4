@@ -10,7 +10,7 @@ const html = gunzipSync(bytes).toString("utf8");
 
 for (const required of [
   "Overview", "Messages", "What this radio can hear", "Radio", "This radio", "/api/frame", "/api/network",
-  "X-RCC6-Session", "application/x-www-form-urlencoded", "Set up local Wi-Fi",
+  "X-RCC6-Session", "application/x-www-form-urlencoded", "Set up local Wi-Fi", "LAN WEB LOGIN",
   "meshcore", "localStorage", "rcc6-radio-owner", "rcc6-history-pending-", "syncNextMessage", "MeshCore.js",
   "NeonPocketMC", "brand-pocket",
   "NeonPocket Ultimate Companion", "LAST 24 HOURS", "Advertised places", "MEMORY HEADROOM",
@@ -29,6 +29,9 @@ if (html.includes("navigator.locks")) throw new Error("Secure-context Web Locks 
 if (appSource.includes(".getWaitingMessages(")) throw new Error("Destructive batch message drain detected");
 for (const required of ["this.drainTask = this.drainRetainedFrames()", "if (!this.ready) throw"]) {
   if (!appSource.includes(required)) throw new Error(`Takeover drain guard is missing ${required}`);
+}
+for (const required of ["loginUser", "loginKey", "device key, not your home Wi-Fi password"]) {
+  if (!appSource.includes(required)) throw new Error(`LAN login handoff is missing ${required}`);
 }
 for (const required of [
   "async function refreshUltimate()", "function drawUltimateChart(",
