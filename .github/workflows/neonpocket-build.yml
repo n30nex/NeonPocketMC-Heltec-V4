@@ -121,7 +121,7 @@ jobs:
             cp license.txt dist/LICENSE.txt
             git archive --format=zip --output=dist/source-${{ github.event.pull_request.head.sha || github.sha }}.zip HEAD
           fi
-          (cd dist && sha256sum * > SHA256SUMS.txt)
+          (cd dist && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
         with:
           name: NeonPocketMC-Heltec-V4-${{ matrix.transport }}-${{ github.event.pull_request.head.sha || github.sha }}

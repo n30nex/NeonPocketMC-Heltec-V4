@@ -55,3 +55,8 @@ TEST(SolarCompanion, CountersSaturateAndWakeRemainsFinite) {
   EXPECT_LE(SolarCompanion::recoverySeconds, 60);
   EXPECT_GT(SolarCompanion::resumeMv, SolarCompanion::cutoffMv);
 }
+
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
