@@ -1,7 +1,18 @@
 #include "HeltecV4Board.h"
+#ifdef HELTEC_V4_SOLAR_COMPANION
+#include "SolarCompanion.h"
+#endif
 
 void HeltecV4Board::begin() {
     ESP32Board::begin();
+
+#ifdef HELTEC_V4_SOLAR_COMPANION
+    gpio_deep_sleep_hold_dis();
+    gpio_hold_dis((gpio_num_t)PIN_VEXT_EN);
+    pinMode(P_LORA_RESET, OUTPUT);
+    digitalWrite(P_LORA_RESET, HIGH);
+    rtc_gpio_hold_dis((gpio_num_t)P_LORA_RESET);
+#endif
 
 
     pinMode(PIN_ADC_CTRL, OUTPUT);
@@ -33,6 +44,9 @@ void HeltecV4Board::begin() {
   }
 
   void HeltecV4Board::powerOff() {
+#ifdef HELTEC_V4_SOLAR_COMPANION
+    SolarCompanion::sleepForRecharge(true);
+#endif
     // Turn off PA
     digitalWrite(P_LORA_PA_POWER, LOW);
     rtc_gpio_hold_en((gpio_num_t)P_LORA_PA_POWER);

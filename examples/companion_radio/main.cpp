@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <Mesh.h>
 #include "MyMesh.h"
+#ifdef HELTEC_V4_SOLAR_COMPANION
+  #include <SolarCompanion.h>
+#endif
 #ifdef NEONPOCKET_ULTIMATE
   #include "UltimateService.h"
 #endif
@@ -127,6 +130,9 @@ MyMesh the_mesh(radio_driver, fast_rng, rtc_clock, tables, store
 /* END GLOBAL OBJECTS */
 
 void halt() {
+#ifdef HELTEC_V4_SOLAR_COMPANION
+  SolarCompanion::sleepForRecharge(false);
+#endif
   while (1) delay(1000);
 }
 
@@ -186,6 +192,9 @@ static bool probeNeonMemory() {
 void setup() {
   Serial.begin(115200);
   board.begin();
+#ifdef HELTEC_V4_SOLAR_COMPANION
+  SolarCompanion::checkBoot();
+#endif
 
 #ifdef HAS_EXTERNAL_WATCHDOG
   external_watchdog.begin();
@@ -377,9 +386,15 @@ void setup() {
 #endif
 
   board.onBootComplete();
+#ifdef HELTEC_V4_SOLAR_COMPANION
+  SolarCompanion::beginPowerSaving();
+#endif
 }
 
 void loop() {
+#ifdef HELTEC_V4_SOLAR_COMPANION
+  SolarCompanion::loop();
+#endif
   the_mesh.loop();
 #ifdef NEONPOCKET_ULTIMATE
   ultimate_service.loop();
@@ -415,6 +430,9 @@ void loop() {
 #endif
 
   if (!the_mesh.hasPendingWork()) {
+#ifdef HELTEC_V4_SOLAR_COMPANION
+    vTaskDelay(1); // One RTOS tick; BLE and the LoRa interrupt remain live.
+#endif
 #if defined(NRF52_PLATFORM)
     board.sleep(0); // nrf ignores seconds param, sleeps whenever possible
 #endif
