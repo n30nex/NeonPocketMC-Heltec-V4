@@ -56,6 +56,22 @@ TEST(SolarCompanion, CountersSaturateAndWakeRemainsFinite) {
   EXPECT_GT(SolarCompanion::resumeMv, SolarCompanion::cutoffMv);
 }
 
+TEST(SolarCompanion, ColdBootProtectsLowBatteryButAllowsNormalOperation) {
+  uint8_t ready = 0;
+  EXPECT_TRUE(SolarCompanion::bootNeedsRecovery(3300, false, false, ready));
+  EXPECT_FALSE(SolarCompanion::bootNeedsRecovery(3500, false, false, ready));
+  EXPECT_FALSE(SolarCompanion::bootNeedsRecovery(0, false, false, ready)); // USB, no battery
+}
+
+TEST(SolarCompanion, BrownoutAndSubsequentTimerWakeQualifyRecovery) {
+  uint8_t ready = 2; // A new fault must discard previous good samples.
+  EXPECT_TRUE(SolarCompanion::bootNeedsRecovery(3800, false, true, ready));
+  EXPECT_EQ(ready, 1);
+  EXPECT_FALSE(SolarCompanion::bootNeedsRecovery(3800, true, false, ready));
+  ready = 0;
+  EXPECT_TRUE(SolarCompanion::bootNeedsRecovery(3500, true, false, ready));
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

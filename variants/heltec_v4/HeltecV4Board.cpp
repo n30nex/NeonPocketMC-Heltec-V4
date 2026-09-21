@@ -9,6 +9,7 @@ void HeltecV4Board::begin() {
 #ifdef HELTEC_V4_SOLAR_COMPANION
     gpio_deep_sleep_hold_dis();
     gpio_hold_dis((gpio_num_t)PIN_VEXT_EN);
+    gpio_hold_dis((gpio_num_t)PIN_GPS_EN);
     pinMode(P_LORA_RESET, OUTPUT);
     digitalWrite(P_LORA_RESET, HIGH);
     rtc_gpio_hold_dis((gpio_num_t)P_LORA_RESET);

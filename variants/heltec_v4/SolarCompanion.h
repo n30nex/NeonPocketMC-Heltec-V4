@@ -21,6 +21,15 @@ inline bool recharged(uint16_t mv, uint8_t& samples) {
   return samples >= 2;
 }
 
+inline bool bootNeedsRecovery(uint16_t mv, bool recovering, bool faultReset, uint8_t& samples) {
+  if (recovering || faultReset) {
+    if (faultReset) samples = 0;
+    return !recharged(mv, samples);
+  }
+  samples = 0;
+  return lowVoltage(mv);
+}
+
 void checkBoot();
 void beginPowerSaving();
 void loop();

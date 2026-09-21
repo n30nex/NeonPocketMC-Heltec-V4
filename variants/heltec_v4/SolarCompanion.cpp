@@ -36,6 +36,13 @@ static bool watchdogReady = false;
   if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_ENABLED) esp_bluedroid_disable();
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED) esp_bt_controller_disable();
   if (radioReady) radio_driver.powerOff();
+  board.loRaFEMControl.setSleepModeEnable();
+  rtc_gpio_hold_en((gpio_num_t)P_LORA_GC1109_PA_EN);
+
+  // The optional GNSS rail must not remain powered during recharge either.
+  pinMode(PIN_GPS_EN, OUTPUT);
+  digitalWrite(PIN_GPS_EN, !PIN_GPS_EN_ACTIVE);
+  gpio_hold_en((gpio_num_t)PIN_GPS_EN);
 
   // Also safe before SPI/radio/display initialization on a low-voltage boot.
   pinMode(P_LORA_RESET, OUTPUT);
@@ -67,15 +74,11 @@ void checkBoot() {
   }
   const uint16_t mv = board.getBattMilliVolts();
   const auto reset = esp_reset_reason();
-  const bool brownout = reset == ESP_RST_BROWNOUT || reset == ESP_RST_TASK_WDT
+  const bool faultReset = reset == ESP_RST_BROWNOUT || reset == ESP_RST_TASK_WDT
       || reset == ESP_RST_INT_WDT || reset == ESP_RST_WDT;
   Serial.printf("SOLAR: battery=%u mV reset=%lu recovery=%u\n", mv,
-                (unsigned long)esp_reset_reason(), recovery == recoveryMarker || brownout);
-  if (recovery == recoveryMarker || brownout) {
-    if (brownout) chargedSamples = 0;
-    if (!recharged(mv, chargedSamples)) sleepForRecharge(false);
-  } else if (lowVoltage(mv)) {
-    chargedSamples = 0;
+                (unsigned long)esp_reset_reason(), recovery == recoveryMarker || faultReset);
+  if (bootNeedsRecovery(mv, recovery == recoveryMarker, faultReset, chargedSamples)) {
     sleepForRecharge(false);
   }
   recovery = 0;
