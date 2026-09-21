@@ -1120,7 +1120,7 @@ void UITask::loop() {
   vibration.loop();
 #endif
 
-#ifdef AUTO_SHUTDOWN_MILLIVOLTS
+#if defined(AUTO_SHUTDOWN_MILLIVOLTS) && !defined(HELTEC_V4_SOLAR_COMPANION)
   if (millis() > next_batt_chck) {
     uint16_t milliVolts = getBattMilliVolts();
     if (milliVolts > 0 && milliVolts < AUTO_SHUTDOWN_MILLIVOLTS) {

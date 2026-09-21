@@ -51,6 +51,11 @@ void SerialBLEInterface::begin(const char* prefix, char* name, uint32_t pin_code
   pRxCharacteristic->setCallbacks(this);
 
   pServer->getAdvertising()->addServiceUUID(SERVICE_UUID);
+#ifdef HELTEC_V4_SOLAR_COMPANION
+  // 0.625 ms units: always connectable, no multi-second BLE-off windows.
+  pServer->getAdvertising()->setMinInterval(400); // 250 ms
+  pServer->getAdvertising()->setMaxInterval(480); // 300 ms
+#endif
 }
 
 // -------- BLESecurityCallbacks methods

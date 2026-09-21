@@ -13,6 +13,12 @@ Experimental MeshCore BLE, native-USB, and Ultimate Wi-Fi/Web companion firmware
 
 ## What is included
 
+For the V4.2 car-roof solar experiment, see the separate
+[solar BLE companion candidate](docs/SOLAR_BLE.md). It keeps continuous LoRa
+reception and BLE advertising, and adds timed low-battery recovery. Its build,
+power budget, winter charging limits, and required physical tests are documented
+there; it is not a published hardware-qualified release.
+
 - MeshCore 1.17.1 receive-gain fix line, based on exact upstream commit `727fc0512ce08bfd7b499e46daa7fca6eeec730d`.
 - Upstream V4/V4.3 hardware handling retained intact: runtime GC1109/KCT8103L FEM support, VFEM power sequencing, SX1262 register `0x8B5` receive patch, DIO2 RF switching, 1.8 V DIO3 TCXO, active-high Vext, battery sensing, and integrated OLED.
 - A smooth procedural NeonPocket startup, compact phone-like Home dashboard, Inbox, Nearby, Radio, Bluetooth, Advert, and confirmed Power pages.

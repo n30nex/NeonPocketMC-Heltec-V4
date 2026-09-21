@@ -1099,6 +1099,13 @@ void MyMesh::begin(bool has_display) {
   } else {
     _active_ble_pin = _prefs.ble_pin;
   }
+#ifdef HELTEC_V4_SOLAR_COMPANION
+  // Retain the random first-boot PIN through unattended recovery/restarts.
+  if (_prefs.ble_pin == 0) {
+    _prefs.ble_pin = _active_ble_pin;
+    _store->savePrefs(_prefs);
+  }
+#endif
 #else
   _active_ble_pin = 0;
 #endif
